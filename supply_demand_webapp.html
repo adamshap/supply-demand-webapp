@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply and Demand Driven PCE Inflation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #003A63;
+            color: white;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .citation {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+        }
+
+        .controls {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 300px;
+            height: fit-content;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #003A63;
+            font-size: 0.95em;
+        }
+
+        .control-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .control-group select:hover {
+            border-color: #003A63;
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: #005A93;
+            box-shadow: 0 0 0 3px rgba(0, 58, 99, 0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .date-inputs input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .charts {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-container h2 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #003A63;
+            font-weight: 600;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 500px;
+        }
+
+        .download-btn {
+            background-color: #003A63;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .download-btn:hover {
+            background-color: #005A93;
+        }
+
+        footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .info-box {
+            background-color: #e8f4f8;
+            border-left: 4px solid #003A63;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 0;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Supply and Demand Driven PCE Inflation</h1>
+            <p>Decomposition of inflation into supply-driven, demand-driven, and ambiguous components</p>
+            <div class="citation">Shapiro (2026), <i>Journal of Money, Credit and Banking</i> | <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/jmcb.13209" style="color: #a8d5e2;">Published Article</a> | <a href="https://www.frbsf.org/wp-content/uploads/wp2022-18.pdf" style="color: #a8d5e2;">Working Paper</a></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <aside class="controls">
+                <h3 style="margin-bottom: 20px; color: #003A63;">Chart Options</h3>
+
+                <div class="info-box">
+                    <p>Select options below to customize the inflation decomposition view.</p>
+                </div>
+
+                <div class="control-group">
+                    <label>Inflation Series:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="series" value="headline" checked> Headline PCE</label>
+                        <label><input type="radio" name="series" value="core"> Core PCE (ex. food & energy)</label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Frequency:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="frequency" value="monthly" checked> Monthly (m/m)</label>
+                        <label><input type="radio" name="frequency" value="yearly"> Year-over-year (y/y)</label>
+                        <label><input type="radio" name="frequency" value="quarterly"> Quarterly (q/q)</label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Breakdown:</label>
+                    <select id="breakdown">
+                        <option value="ambiguous">Baseline (with ambiguous)</option>
+                        <option value="goods_services_amb">Goods/Housing/Services (with ambiguous)</option>
+                        <option value="precision">Precision levels</option>
+                        <option value="baseline">Baseline (no ambiguous)</option>
+                        <option value="goods_services">Goods/Housing/Services (no ambiguous)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Date Range:</label>
+                    <div class="date-inputs">
+                        <input type="text" id="startDate" placeholder="YYYY-MM" value="2019-01">
+                        <input type="text" id="endDate" placeholder="YYYY-MM" value="2026-04">
+                    </div>
+                </div>
+
+                <button class="download-btn" onclick="downloadFullCSV()">Download Full Dataset (CSV)</button>
+                <button class="download-btn" onclick="downloadViewCSV()" style="margin-top: 10px;">Download Current View (CSV)</button>
+            </aside>
+
+            <main class="charts">
+                <div class="chart-container">
+                    <h2 id="chartTitle">Supply and Demand Driven Inflation Contributions</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h2>Last 24 Months</h2>
+                    <div class="chart-wrapper" style="height: 350px;">
+                        <canvas id="recentChart"></canvas>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer>
+        <p>Data source: Bureau of Economic Analysis | Updated monthly</p>
+        <p>Federal Reserve Bank of San Francisco</p>
+    </footer>
+
+    <script>
+        let allData = {};
+        let mainChart = null;
+        let recentChart = null;
+
+        // Color scheme matching SF Fed
+        const colors = {
+            demand: '#4A90E2',      // Blue
+            supply: '#50C878',      // Green
+            ambiguous: '#95A5A6',   // Gray
+            demandHH: '#2E5C8A',    // Dark blue
+            demandH: '#4A90E2',     // Blue
+            demandL: '#7BB3E8',     // Light blue
+            supplyHH: '#2D8B5B',    // Dark green
+            supplyH: '#50C878',     // Green
+            supplyL: '#7FD99A',     // Light green
+            goods: '#E67E22',       // Orange
+            housing: '#9B59B6',     // Purple
+            services: '#3498DB'     // Light blue
+        };
+
+        // CSV parsing function
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split(',');
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                const row = {};
+                headers.forEach((header, index) => {
+                    const value = values[index];
+                    // Try to parse as number, otherwise keep as string
+                    row[header] = isNaN(value) || value === '' ? value : parseFloat(value);
+                });
+                data.push(row);
+            }
+            return data;
+        }
+
+        // Load all CSV files
+        Promise.all([
+            fetch('supply_demand_baseline.csv').then(r => r.text()).then(parseCSV),
+            fetch('supply_demand_ambiguous.csv').then(r => r.text()).then(parseCSV),
+            fetch('supply_demand_quarterly.csv').then(r => r.text()).then(parseCSV),
+            fetch('supply_demand_goods_services.csv').then(r => r.text()).then(parseCSV),
+            fetch('supply_demand_goods_services_ambiguous.csv').then(r => r.text()).then(parseCSV),
+            fetch('supply_demand_precision.csv').then(r => r.text()).then(parseCSV)
+        ]).then(([baseline, ambiguous, quarterly, goodsServices, goodsServicesAmb, precision]) => {
+            allData = {
+                'Baseline': baseline,
+                'Ambiguous': ambiguous,
+                'Quarterly': quarterly,
+                'Goods_Services': goodsServices,
+                'Goods_Services_Ambiguous': goodsServicesAmb,
+                'Precision': precision
+            };
+            updateCharts();
+        }).catch(error => console.error('Error loading data:', error));
+
+        // Event listeners
+        document.querySelectorAll('input[name="series"], input[name="frequency"]').forEach(input => {
+            input.addEventListener('change', updateCharts);
+        });
+
+        document.getElementById('breakdown').addEventListener('change', updateCharts);
+        document.getElementById('startDate').addEventListener('change', updateCharts);
+        document.getElementById('endDate').addEventListener('change', updateCharts);
+
+        function updateCharts() {
+            const series = document.querySelector('input[name="series"]:checked').value;
+            const frequency = document.querySelector('input[name="frequency"]:checked').value;
+            const breakdown = document.getElementById('breakdown').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            const config = getChartConfig(series, frequency, breakdown);
+            const filteredData = filterDataByDate(config.data, config.dateKey, startDate, endDate);
+            const recentData = getRecentMonths(config.data, config.dateKey, 24);
+
+            if (mainChart) mainChart.destroy();
+            if (recentChart) recentChart.destroy();
+
+            mainChart = createChart('mainChart', filteredData, config);
+            recentChart = createChart('recentChart', recentData, config);
+
+            document.getElementById('chartTitle').textContent = config.title;
+        }
+
+        function getChartConfig(series, frequency, breakdown) {
+            const seriesLabel = series === 'headline' ? 'headline' : 'core';
+            const freqLabel = frequency === 'monthly' ? 'm/m' : frequency === 'yearly' ? 'y/y' : 'q/q';
+
+            let sheetName, dateKey, datasets;
+
+            if (frequency === 'quarterly') {
+                sheetName = 'Quarterly';
+                dateKey = 'time_quarter';
+            } else if (breakdown === 'ambiguous') {
+                sheetName = 'Ambiguous';
+                dateKey = 'time_month';
+            } else if (breakdown === 'goods_services') {
+                sheetName = 'Goods_Services';
+                dateKey = 'time_month';
+            } else if (breakdown === 'goods_services_amb') {
+                sheetName = 'Goods_Services_Ambiguous';
+                dateKey = 'time_month';
+            } else if (breakdown === 'precision') {
+                sheetName = 'Precision';
+                dateKey = 'time_month';
+            } else {
+                sheetName = 'Baseline';
+                dateKey = 'time_month';
+            }
+
+            const data = allData[sheetName] || [];
+
+            // Build datasets based on breakdown type
+            if (breakdown === 'goods_services' || breakdown === 'goods_services_amb') {
+                const hasAmb = breakdown === 'goods_services_amb';
+                const freq = frequency === 'yearly' ? 'y' : frequency === 'monthly' ? 'm' : 'q';
+                datasets = [
+                    {
+                        label: `Demand (goods), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand-driven contr. (goods), ${seriesLabel},${freq}/${freq}`] || d[`Demand-driven contr. (goods), ${seriesLabel}, ${freq}/${freq}`] })),
+                        backgroundColor: colors.goods,
+                    },
+                    {
+                        label: `Supply (goods), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply-driven contr. (goods), ${seriesLabel},${freq}/${freq}`] || d[`Supply-driven contr. (goods), ${seriesLabel}, ${freq}/${freq}`] })),
+                        backgroundColor: colors.supply,
+                    }
+                ];
+                if (hasAmb) {
+                    datasets.push({
+                        label: `Ambiguous (goods), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambiguous contr. (goods), ${seriesLabel},${freq}/${freq}`] })),
+                        backgroundColor: colors.ambiguous,
+                    });
+                }
+                datasets.push(
+                    {
+                        label: `Demand (housing), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand-driven contr. (housing), ${seriesLabel},${freq}/${freq}`] || d[`Demand-driven contr. (housing), ${seriesLabel}, ${freq}/${freq}`] })),
+                        backgroundColor: colors.housing,
+                    },
+                    {
+                        label: `Supply (housing), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply-driven contr. (housing), ${seriesLabel},${freq}/${freq}`] || d[`Supply-driven contr. (housing), ${seriesLabel}, ${freq}/${freq}`] })),
+                        backgroundColor: colors.supplyH,
+                    }
+                );
+                if (hasAmb) {
+                    datasets.push({
+                        label: `Ambiguous (housing), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambiguous contr. (housing), ${seriesLabel},${freq}/${freq}`] })),
+                        backgroundColor: colors.ambiguous,
+                    });
+                }
+                datasets.push(
+                    {
+                        label: `Demand (serv ex hous), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand-driven contr. (serv ex hous), ${seriesLabel},${freq}/${freq}`] || d[`Demand-driven contr. (serv ex hous), ${seriesLabel}, ${freq}/${freq}`] })),
+                        backgroundColor: colors.services,
+                    },
+                    {
+                        label: `Supply (serv ex hous), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply-driven contr. (serv ex hous), ${seriesLabel},${freq}/${freq}`] || d[`Supply-driven contr. (serv ex hous), ${seriesLabel}, ${freq}/${freq}`] })),
+                        backgroundColor: colors.supplyL,
+                    }
+                );
+                if (hasAmb) {
+                    datasets.push({
+                        label: `Ambiguous (serv ex hous), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambiguous (serv ex hous), ${seriesLabel},${freq}/${freq}`] })),
+                        backgroundColor: colors.ambiguous,
+                    });
+                }
+            } else if (breakdown === 'precision') {
+                datasets = [
+                    {
+                        label: `Demand (precise), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand contr. (precise), ${seriesLabel},${freqLabel}`] })),
+                        backgroundColor: colors.demandHH,
+                    },
+                    {
+                        label: `Demand (mid-precise), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand contr. (mid-precise), ${seriesLabel},${freqLabel}`] })),
+                        backgroundColor: colors.demandH,
+                    },
+                    {
+                        label: `Demand (less-precise), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand contr. (less-precise), ${seriesLabel},${freqLabel}`] })),
+                        backgroundColor: colors.demandL,
+                    },
+                    {
+                        label: `Supply (precise), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply contr. (precise), ${seriesLabel},${freqLabel}`] })),
+                        backgroundColor: colors.supplyHH,
+                    },
+                    {
+                        label: `Supply (mid-precise), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply contr. (mid-precise), ${seriesLabel},${freqLabel}`] })),
+                        backgroundColor: colors.supplyH,
+                    },
+                    {
+                        label: `Supply (less-precise), ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply contr. (less-precise), ${seriesLabel},${freqLabel}`] })),
+                        backgroundColor: colors.supplyL,
+                    },
+                    {
+                        label: `Ambiguous, ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambig contr., ${seriesLabel}, ${freqLabel}`] })),
+                        backgroundColor: colors.ambiguous,
+                    }
+                ];
+            } else {
+                const hasAmb = breakdown === 'ambiguous';
+                datasets = [
+                    {
+                        label: `Demand-driven, ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand-driven contr., ${seriesLabel}, ${freqLabel}`] })),
+                        backgroundColor: colors.demand,
+                    },
+                    {
+                        label: `Supply-driven, ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply-driven contr., ${seriesLabel}, ${freqLabel}`] })),
+                        backgroundColor: colors.supply,
+                    }
+                ];
+                if (hasAmb) {
+                    datasets.push({
+                        label: `Ambiguous, ${seriesLabel}`,
+                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambig contr., ${seriesLabel}, ${freqLabel === 'm/m' ? 'm/m' : 'y'}`] })),
+                        backgroundColor: colors.ambiguous,
+                    });
+                }
+            }
+
+            return {
+                data,
+                dateKey,
+                datasets,
+                title: `Supply and Demand Driven ${series === 'headline' ? 'Headline' : 'Core'} PCE Inflation (${freqLabel})`
+            };
+        }
+
+        function createChart(canvasId, data, config) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    datasets: config.datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'month',
+                                displayFormats: {
+                                    month: 'MMM yyyy'
+                                }
+                            },
+                            stacked: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Percentage Points'
+                            },
+                            grid: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 10
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' pp';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterDataByDate(data, dateKey, startDate, endDate) {
+            if (!startDate && !endDate) return data;
+
+            return data.filter(d => {
+                const date = d[dateKey];
+                if (startDate && date < startDate) return false;
+                if (endDate && date > endDate + '-28') return false;
+                return true;
+            });
+        }
+
+        function getRecentMonths(data, dateKey, months) {
+            return data.slice(-months);
+        }
+
+        function downloadFullCSV() {
+            const series = document.querySelector('input[name="series"]:checked').value;
+            const frequency = document.querySelector('input[name="frequency"]:checked').value;
+            const breakdown = document.getElementById('breakdown').value;
+
+            const config = getChartConfig(series, frequency, breakdown);
+            const data = config.data; // Full dataset, no date filtering
+
+            if (!data || data.length === 0) {
+                alert('No data available to download');
+                return;
+            }
+
+            downloadDataAsCSV(data, `supply_demand_${series}_${frequency}_${breakdown}_full.csv`);
+        }
+
+        function downloadViewCSV() {
+            const series = document.querySelector('input[name="series"]:checked').value;
+            const frequency = document.querySelector('input[name="frequency"]:checked').value;
+            const breakdown = document.getElementById('breakdown').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            const config = getChartConfig(series, frequency, breakdown);
+            const filteredData = filterDataByDate(config.data, config.dateKey, startDate, endDate);
+
+            if (!filteredData || filteredData.length === 0) {
+                alert('No data available to download');
+                return;
+            }
+
+            downloadDataAsCSV(filteredData, `supply_demand_${series}_${frequency}_${breakdown}_${startDate}_to_${endDate}.csv`);
+        }
+
+        function downloadDataAsCSV(data, filename) {
+            // Get headers
+            const headers = Object.keys(data[0]);
+
+            // Build CSV
+            let csv = headers.join(',') + '\n';
+            data.forEach(row => {
+                csv += headers.map(h => {
+                    const val = row[h];
+                    return typeof val === 'string' && val.includes(',') ? `"${val}"` : val;
+                }).join(',') + '\n';
+            });
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
