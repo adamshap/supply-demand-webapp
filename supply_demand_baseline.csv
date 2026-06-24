@@ -1,4 +1,4 @@
-time_month,dem_contr_y_head,sup_contr_y_head,dem_contr_m_head,sup_contr_m_head,dem_contr_y_core,sup_contr_y_core,dem_contr_m_core,sup_contr_m_core
+date,dem_hdln_yoy,sup_hdln_yoy,dem_hdln_mom,sup_hdln_mom,dem_core_yoy,sup_core_yoy,dem_core_mom,sup_core_mom
 1969m1,,,.09,.31,,,.1,.28
 1969m2,,,.07,.18,,,.11,.24
 1969m3,,,.16,.32,,,.19,.28

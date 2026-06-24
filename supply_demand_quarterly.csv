@@ -1,4 +1,4 @@
-time_quarter,dem_contr_y_head,sup_contr_y_head,dem_contr_q_head,sup_contr_q_head,dem_contr_y_core,sup_contr_y_core,dem_contr_q_core,sup_contr_q_core
+date,dem_hdln_yoy,sup_hdln_yoy,dem_hdln_qoq,sup_hdln_qoq,dem_core_yoy,sup_core_yoy,dem_core_qoq,sup_core_qoq
 1969q1,,,.0044799438,.0052324804,,,.0042569516,.0067061032
 1969q2,,,.0039867871,.0087654721,,,.004108584,.0078769922
 1969q3,,,.0038177103,.0084286323,,,.0046616332,.0068838489
