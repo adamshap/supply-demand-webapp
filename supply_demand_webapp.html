@@ -366,29 +366,25 @@
         }
 
         function getChartConfig(series, frequency, breakdown) {
-            const seriesLabel = series === 'headline' ? 'headline' : 'core';
+            const s = series === 'headline' ? 'hdln' : 'core';
+            const f = frequency === 'monthly' ? 'mom' : frequency === 'yearly' ? 'yoy' : 'qoq';
             const freqLabel = frequency === 'monthly' ? 'm/m' : frequency === 'yearly' ? 'y/y' : 'q/q';
 
-            let sheetName, dateKey, datasets;
+            let sheetName, dateKey = 'date', datasets;
 
+            // Determine which sheet to use
             if (frequency === 'quarterly') {
                 sheetName = 'Quarterly';
-                dateKey = 'time_quarter';
             } else if (breakdown === 'ambiguous') {
                 sheetName = 'Ambiguous';
-                dateKey = 'time_month';
             } else if (breakdown === 'goods_services') {
                 sheetName = 'Goods_Services';
-                dateKey = 'time_month';
             } else if (breakdown === 'goods_services_amb') {
                 sheetName = 'Goods_Services_Ambiguous';
-                dateKey = 'time_month';
             } else if (breakdown === 'precision') {
                 sheetName = 'Precision';
-                dateKey = 'time_month';
             } else {
                 sheetName = 'Baseline';
-                dateKey = 'time_month';
             }
 
             const data = allData[sheetName] || [];
@@ -396,122 +392,45 @@
             // Build datasets based on breakdown type
             if (breakdown === 'goods_services' || breakdown === 'goods_services_amb') {
                 const hasAmb = breakdown === 'goods_services_amb';
-                const freq = frequency === 'yearly' ? 'y' : frequency === 'monthly' ? 'm' : 'q';
                 datasets = [
-                    {
-                        label: `Demand (goods), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand-driven contr. (goods), ${seriesLabel},${freq}/${freq}`] || d[`Demand-driven contr. (goods), ${seriesLabel}, ${freq}/${freq}`] })),
-                        backgroundColor: colors.goods,
-                    },
-                    {
-                        label: `Supply (goods), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply-driven contr. (goods), ${seriesLabel},${freq}/${freq}`] || d[`Supply-driven contr. (goods), ${seriesLabel}, ${freq}/${freq}`] })),
-                        backgroundColor: colors.supply,
-                    }
+                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.goods },
+                    { label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply }
                 ];
                 if (hasAmb) {
-                    datasets.push({
-                        label: `Ambiguous (goods), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambiguous contr. (goods), ${seriesLabel},${freq}/${freq}`] })),
-                        backgroundColor: colors.ambiguous,
-                    });
+                    datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
                 datasets.push(
-                    {
-                        label: `Demand (housing), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand-driven contr. (housing), ${seriesLabel},${freq}/${freq}`] || d[`Demand-driven contr. (housing), ${seriesLabel}, ${freq}/${freq}`] })),
-                        backgroundColor: colors.housing,
-                    },
-                    {
-                        label: `Supply (housing), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply-driven contr. (housing), ${seriesLabel},${freq}/${freq}`] || d[`Supply-driven contr. (housing), ${seriesLabel}, ${freq}/${freq}`] })),
-                        backgroundColor: colors.supplyH,
-                    }
+                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.housing },
+                    { label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supplyH }
                 );
                 if (hasAmb) {
-                    datasets.push({
-                        label: `Ambiguous (housing), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambiguous contr. (housing), ${seriesLabel},${freq}/${freq}`] })),
-                        backgroundColor: colors.ambiguous,
-                    });
+                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
                 datasets.push(
-                    {
-                        label: `Demand (serv ex hous), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand-driven contr. (serv ex hous), ${seriesLabel},${freq}/${freq}`] || d[`Demand-driven contr. (serv ex hous), ${seriesLabel}, ${freq}/${freq}`] })),
-                        backgroundColor: colors.services,
-                    },
-                    {
-                        label: `Supply (serv ex hous), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply-driven contr. (serv ex hous), ${seriesLabel},${freq}/${freq}`] || d[`Supply-driven contr. (serv ex hous), ${seriesLabel}, ${freq}/${freq}`] })),
-                        backgroundColor: colors.supplyL,
-                    }
+                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.services },
+                    { label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supplyL }
                 );
                 if (hasAmb) {
-                    datasets.push({
-                        label: `Ambiguous (serv ex hous), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambiguous (serv ex hous), ${seriesLabel},${freq}/${freq}`] })),
-                        backgroundColor: colors.ambiguous,
-                    });
+                    datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
             } else if (breakdown === 'precision') {
                 datasets = [
-                    {
-                        label: `Demand (precise), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand contr. (precise), ${seriesLabel},${freqLabel}`] })),
-                        backgroundColor: colors.demandHH,
-                    },
-                    {
-                        label: `Demand (mid-precise), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand contr. (mid-precise), ${seriesLabel},${freqLabel}`] })),
-                        backgroundColor: colors.demandH,
-                    },
-                    {
-                        label: `Demand (less-precise), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand contr. (less-precise), ${seriesLabel},${freqLabel}`] })),
-                        backgroundColor: colors.demandL,
-                    },
-                    {
-                        label: `Supply (precise), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply contr. (precise), ${seriesLabel},${freqLabel}`] })),
-                        backgroundColor: colors.supplyHH,
-                    },
-                    {
-                        label: `Supply (mid-precise), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply contr. (mid-precise), ${seriesLabel},${freqLabel}`] })),
-                        backgroundColor: colors.supplyH,
-                    },
-                    {
-                        label: `Supply (less-precise), ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply contr. (less-precise), ${seriesLabel},${freqLabel}`] })),
-                        backgroundColor: colors.supplyL,
-                    },
-                    {
-                        label: `Ambiguous, ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambig contr., ${seriesLabel}, ${freqLabel}`] })),
-                        backgroundColor: colors.ambiguous,
-                    }
+                    { label: 'Demand (HH precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                    { label: 'Demand (H precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
+                    { label: 'Demand (L precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
+                    { label: 'Supply (HH precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH },
+                    { label: 'Supply (H precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
+                    { label: 'Supply (L precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
+                    { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous }
                 ];
             } else {
                 const hasAmb = breakdown === 'ambiguous';
                 datasets = [
-                    {
-                        label: `Demand-driven, ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Demand-driven contr., ${seriesLabel}, ${freqLabel}`] })),
-                        backgroundColor: colors.demand,
-                    },
-                    {
-                        label: `Supply-driven, ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Supply-driven contr., ${seriesLabel}, ${freqLabel}`] })),
-                        backgroundColor: colors.supply,
-                    }
+                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: d[`dem_${s}_${f}`] })), backgroundColor: colors.demand },
+                    { label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: d[`sup_${s}_${f}`] })), backgroundColor: colors.supply }
                 ];
                 if (hasAmb) {
-                    datasets.push({
-                        label: `Ambiguous, ${seriesLabel}`,
-                        data: data.map(d => ({ x: d[dateKey], y: d[`Ambig contr., ${seriesLabel}, ${freqLabel === 'm/m' ? 'm/m' : 'y'}`] })),
-                        backgroundColor: colors.ambiguous,
-                    });
+                    datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
             }
 
