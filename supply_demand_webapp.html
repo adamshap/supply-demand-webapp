@@ -808,16 +808,27 @@
             const series = document.querySelector('input[name="series"]:checked').value;
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
             const breakdown = document.getElementById('breakdown').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
+            const showAmbiguous = document.getElementById('showAmbiguous').checked;
 
-            const config = getChartConfig(series, frequency, breakdown);
-            const filteredData = filterDataByDate(config.data, config.dateKey, startDate, endDate);
+            const config = getChartConfig(series, frequency, breakdown, showAmbiguous);
+
+            // Get slider positions
+            const startSlider = parseInt(document.getElementById('startDateSlider').value);
+            const endSlider = parseInt(document.getElementById('endDateSlider').value);
+
+            const totalMonths = config.data.length;
+            const startIdx = Math.floor((startSlider / 100) * totalMonths);
+            const endIdx = Math.min(Math.floor((endSlider / 100) * totalMonths), totalMonths - 1);
+
+            const filteredData = config.data.slice(startIdx, endIdx + 1);
 
             if (!filteredData || filteredData.length === 0) {
                 alert('No data available to download');
                 return;
             }
+
+            const startDate = filteredData[0]?.date?.substring(0, 7) || 'start';
+            const endDate = filteredData[filteredData.length - 1]?.date?.substring(0, 7) || 'end';
 
             downloadDataAsCSV(filteredData, `supply_demand_${series}_${frequency}_${breakdown}_${startDate}_to_${endDate}.csv`);
         }
