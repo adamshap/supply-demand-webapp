@@ -562,14 +562,15 @@
             return data;
         }
 
-        // Load all CSV files
+        // Load all CSV files with cache busting
+        const cacheBuster = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
         Promise.all([
-            fetch('supply_demand_baseline.csv').then(r => r.text()).then(parseCSV),
-            fetch('supply_demand_ambiguous.csv').then(r => r.text()).then(parseCSV),
-            fetch('supply_demand_quarterly.csv').then(r => r.text()).then(parseCSV),
-            fetch('supply_demand_goods_services.csv').then(r => r.text()).then(parseCSV),
-            fetch('supply_demand_goods_services_ambiguous.csv').then(r => r.text()).then(parseCSV),
-            fetch('supply_demand_precision.csv').then(r => r.text()).then(parseCSV)
+            fetch(`supply_demand_baseline.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_quarterly.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_goods_services.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_goods_services_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_precision.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV)
         ]).then(([baseline, ambiguous, quarterly, goodsServices, goodsServicesAmb, precision]) => {
             allData = {
                 'Baseline': baseline,
