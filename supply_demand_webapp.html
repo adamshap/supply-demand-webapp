@@ -294,7 +294,7 @@
         const colors = {
             demand: 'rgb(120, 180, 230)',      // Baby blue
             supply: 'rgb(255, 140, 140)',      // Baby red/pink
-            ambiguous: 'rgb(250, 235, 210)',   // Cream
+            ambiguous: 'rgb(255, 0, 255)',     // BRIGHT MAGENTA FOR TESTING
             demandHH: 'rgb(60, 120, 180)',     // Darkest baby blue (very high precision)
             demandH: 'rgb(90, 150, 205)',      // Dark baby blue (high precision)
             demandL: 'rgb(150, 200, 235)',     // Light baby blue (low precision)
@@ -636,6 +636,13 @@
 
         function createChart(canvasId, data, config) {
             const ctx = document.getElementById(canvasId).getContext('2d');
+
+            // Debug: Log what datasets we're creating
+            console.log('Creating chart with datasets:', config.datasets.map(d => ({
+                label: d.label,
+                dataLength: d.data.length,
+                sampleValues: d.data.slice(0, 3).map(pt => pt.y)
+            })));
 
             // Add border and ensure full opacity for each dataset
             config.datasets.forEach(dataset => {
