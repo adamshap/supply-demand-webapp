@@ -285,18 +285,18 @@
 
         // Color scheme matching SF Fed
         const colors = {
-            demand: '#6B9BD1',      // Soft blue
-            supply: '#D17B7B',      // Soft red
+            demand: '#89CFF0',      // Baby blue
+            supply: '#FF9999',      // Baby red
             ambiguous: '#F5E6D3',   // Cream
-            demandHH: '#2B5278',    // Darkest blue (very high precision)
-            demandH: '#4A7BA7',     // Dark blue (high precision)
-            demandL: '#9CBCE5',     // Light blue (low precision)
-            supplyHH: '#8B3A3A',    // Darkest red (very high precision)
-            supplyH: '#B85C5C',     // Dark red (high precision)
-            supplyL: '#E5A0A0',     // Light red (low precision)
-            goods: '#E67E22',       // Orange
-            housing: '#9B59B6',     // Purple
-            services: '#6B9BD1'     // Soft blue
+            demandHH: '#4682B4',    // Darkest baby blue (very high precision)
+            demandH: '#6CA6CD',     // Dark baby blue (high precision)
+            demandL: '#B0E0E6',     // Light baby blue (low precision)
+            supplyHH: '#CD5C5C',    // Darkest baby red (very high precision)
+            supplyH: '#F08080',     // Dark baby red (high precision)
+            supplyL: '#FFB6C1',     // Light baby red (low precision)
+            goods: '#FFB347',       // Pastel orange
+            housing: '#DDA0DD',     // Plum
+            services: '#89CFF0'     // Baby blue
         };
 
         // CSV parsing function
@@ -374,7 +374,7 @@
 
             const totalMonths = config.data.length;
             const startIdx = Math.floor((startSlider / 100) * totalMonths);
-            const endIdx = Math.floor((endSlider / 100) * totalMonths);
+            const endIdx = Math.min(Math.floor((endSlider / 100) * totalMonths), totalMonths - 1);
 
             const startDate = config.data[startIdx]?.date || config.data[0]?.date;
             const endDate = config.data[endIdx]?.date || config.data[config.data.length - 1]?.date;
@@ -383,8 +383,12 @@
             document.getElementById('startDateLabel').textContent = startDate ? startDate.substring(0, 7) : '';
             document.getElementById('endDateLabel').textContent = endDate ? endDate.substring(0, 7) : '';
 
-            const filteredData = filterDataByDate(config.data, config.dateKey, startDate, endDate);
-            const recentData = config.data.slice(-24);
+            // Use slice instead of filter for better performance
+            const filteredData = config.data.slice(startIdx, endIdx + 1);
+
+            // For quarterly data, show last 8 quarters (2 years), for monthly show last 24 months
+            const recentCount = frequency === 'quarterly' ? 8 : 24;
+            const recentData = config.data.slice(-recentCount);
 
             if (mainChart) mainChart.destroy();
             if (recentChart) recentChart.destroy();
