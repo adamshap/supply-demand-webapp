@@ -242,11 +242,13 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Date Range:</label>
-                    <div class="date-inputs">
-                        <input type="text" id="startDate" placeholder="YYYY-MM" value="2019-01">
-                        <input type="text" id="endDate" placeholder="YYYY-MM" value="2026-04">
-                    </div>
+                    <label>Start Date: <span id="startDateLabel">2019-01</span></label>
+                    <input type="range" id="startDateSlider" min="0" max="100" value="85" style="width: 100%;">
+                </div>
+
+                <div class="control-group">
+                    <label>End Date: <span id="endDateLabel">2026-04</span></label>
+                    <input type="range" id="endDateSlider" min="0" max="100" value="100" style="width: 100%;">
                 </div>
 
                 <button class="download-btn" onclick="downloadFullCSV()">Download Full Dataset (CSV)</button>
@@ -283,18 +285,18 @@
 
         // Color scheme matching SF Fed
         const colors = {
-            demand: '#4A90E2',      // Blue
-            supply: '#50C878',      // Green
-            ambiguous: '#95A5A6',   // Gray
-            demandHH: '#2E5C8A',    // Dark blue
-            demandH: '#4A90E2',     // Blue
-            demandL: '#7BB3E8',     // Light blue
-            supplyHH: '#2D8B5B',    // Dark green
-            supplyH: '#50C878',     // Green
-            supplyL: '#7FD99A',     // Light green
+            demand: '#6B9BD1',      // Soft blue
+            supply: '#D17B7B',      // Soft red
+            ambiguous: '#F5E6D3',   // Cream
+            demandHH: '#2B5278',    // Darkest blue (very high precision)
+            demandH: '#4A7BA7',     // Dark blue (high precision)
+            demandL: '#9CBCE5',     // Light blue (low precision)
+            supplyHH: '#8B3A3A',    // Darkest red (very high precision)
+            supplyH: '#B85C5C',     // Dark red (high precision)
+            supplyL: '#E5A0A0',     // Light red (low precision)
             goods: '#E67E22',       // Orange
             housing: '#9B59B6',     // Purple
-            services: '#3498DB'     // Light blue
+            services: '#6B9BD1'     // Soft blue
         };
 
         // CSV parsing function
@@ -356,19 +358,33 @@
         });
 
         document.getElementById('breakdown').addEventListener('change', updateCharts);
-        document.getElementById('startDate').addEventListener('change', updateCharts);
-        document.getElementById('endDate').addEventListener('change', updateCharts);
+        document.getElementById('startDateSlider').addEventListener('input', updateCharts);
+        document.getElementById('endDateSlider').addEventListener('input', updateCharts);
 
         function updateCharts() {
             const series = document.querySelector('input[name="series"]:checked').value;
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
             const breakdown = document.getElementById('breakdown').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
 
             const config = getChartConfig(series, frequency, breakdown);
+
+            // Get slider positions and convert to dates
+            const startSlider = parseInt(document.getElementById('startDateSlider').value);
+            const endSlider = parseInt(document.getElementById('endDateSlider').value);
+
+            const totalMonths = config.data.length;
+            const startIdx = Math.floor((startSlider / 100) * totalMonths);
+            const endIdx = Math.floor((endSlider / 100) * totalMonths);
+
+            const startDate = config.data[startIdx]?.date || config.data[0]?.date;
+            const endDate = config.data[endIdx]?.date || config.data[config.data.length - 1]?.date;
+
+            // Update labels
+            document.getElementById('startDateLabel').textContent = startDate ? startDate.substring(0, 7) : '';
+            document.getElementById('endDateLabel').textContent = endDate ? endDate.substring(0, 7) : '';
+
             const filteredData = filterDataByDate(config.data, config.dateKey, startDate, endDate);
-            const recentData = getRecentMonths(config.data, config.dateKey, 24);
+            const recentData = config.data.slice(-24);
 
             if (mainChart) mainChart.destroy();
             if (recentChart) recentChart.destroy();
@@ -428,24 +444,26 @@
                     datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
             } else if (breakdown === 'precision') {
+                // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
                 datasets = [
-                    { label: 'Demand (HH precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                    { label: 'Demand (H precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                    { label: 'Demand (L precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
-                    { label: 'Supply (HH precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH },
-                    { label: 'Supply (H precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                    { label: 'Supply (L precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
-                    { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous }
+                    { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
+                    { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
+                    { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                    { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
+                    { label: 'Supply (low precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
+                    { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
+                    { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                 ];
             } else {
                 const hasAmb = breakdown === 'ambiguous';
+                // Order: Demand (bottom), Ambiguous (middle), Supply (top)
                 datasets = [
-                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: d[`dem_${s}_${f}`] })), backgroundColor: colors.demand },
-                    { label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: d[`sup_${s}_${f}`] })), backgroundColor: colors.supply }
+                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: d[`dem_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (hasAmb) {
                     datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
+                datasets.push({ label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: d[`sup_${s}_${f}`] })), backgroundColor: colors.supply });
             }
 
             return {
