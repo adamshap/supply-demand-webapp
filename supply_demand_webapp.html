@@ -258,7 +258,7 @@
                     <input type="range" id="endDateSlider" min="0" max="100" value="100" style="width: 100%;">
                 </div>
 
-                <button class="download-btn" onclick="downloadFullCSV()">Download Full Dataset (CSV)</button>
+                <button class="download-btn" onclick="downloadFullDataset()">Download Full Dataset (Excel)</button>
                 <button class="download-btn" onclick="downloadViewCSV()" style="margin-top: 10px;">Download Current View (CSV)</button>
             </aside>
 
@@ -788,20 +788,13 @@
             return data.slice(-months);
         }
 
-        function downloadFullCSV() {
-            const series = document.querySelector('input[name="series"]:checked').value;
-            const frequency = document.querySelector('input[name="frequency"]:checked').value;
-            const breakdown = document.getElementById('breakdown').value;
-
-            const config = getChartConfig(series, frequency, breakdown);
-            const data = config.data; // Full dataset, no date filtering
-
-            if (!data || data.length === 0) {
-                alert('No data available to download');
-                return;
-            }
-
-            downloadDataAsCSV(data, `supply_demand_${series}_${frequency}_${breakdown}_full.csv`);
+        function downloadFullDataset() {
+            // Download the full Excel file from GitHub
+            const url = 'supply_demand_public.xlsx';
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'supply_demand_public.xlsx';
+            a.click();
         }
 
         function downloadViewCSV() {
