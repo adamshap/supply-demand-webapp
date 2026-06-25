@@ -285,18 +285,18 @@
 
         // Color scheme matching SF Fed
         const colors = {
-            demand: '#5B9BD5',      // Solid soft blue (Excel blue)
-            supply: '#ED7D31',      // Solid soft orange-red (Excel orange)
-            ambiguous: '#FFC000',   // Solid soft gold/yellow
-            demandHH: '#2E5C8A',    // Dark blue (very high precision)
-            demandH: '#4472C4',     // Medium blue (high precision)
-            demandL: '#8FAADC',     // Light blue (low precision)
-            supplyHH: '#C55A11',    // Dark orange-red (very high precision)
-            supplyH: '#ED7D31',     // Medium orange-red (high precision)
-            supplyL: '#F4B183',     // Light orange-red (low precision)
-            goods: '#70AD47',       // Soft green
-            housing: '#9E480E',     // Soft brown
-            services: '#5B9BD5'     // Soft blue
+            demand: '#89CFF0',      // Baby blue
+            supply: '#FF9999',      // Baby red (pink)
+            ambiguous: '#F5E6D3',   // Cream
+            demandHH: '#4682B4',    // Darkest baby blue (very high precision)
+            demandH: '#6CA6CD',     // Dark baby blue (high precision)
+            demandL: '#B0E0E6',     // Light baby blue (low precision)
+            supplyHH: '#CD5C5C',    // Darkest baby red (very high precision)
+            supplyH: '#F08080',     // Dark baby red (high precision)
+            supplyL: '#FFB6C1',     // Light baby red (low precision)
+            goods: '#FFB347',       // Pastel orange
+            housing: '#DDA0DD',     // Plum
+            services: '#89CFF0'     // Baby blue
         };
 
         // CSV parsing function
@@ -376,8 +376,13 @@
             const startIdx = Math.floor((startSlider / 100) * totalMonths);
             const endIdx = Math.min(Math.floor((endSlider / 100) * totalMonths), totalMonths - 1);
 
+            console.log('Slider values:', startSlider, endSlider);
+            console.log('Array indices:', startIdx, endIdx, 'out of', totalMonths);
+
             const startDate = config.data[startIdx]?.date || config.data[0]?.date;
             const endDate = config.data[endIdx]?.date || config.data[config.data.length - 1]?.date;
+
+            console.log('Dates:', startDate, 'to', endDate);
 
             // Update labels
             document.getElementById('startDateLabel').textContent = startDate ? startDate.substring(0, 7) : '';
@@ -385,6 +390,7 @@
 
             // Use slice instead of filter for better performance
             const filteredData = config.data.slice(startIdx, endIdx + 1);
+            console.log('Filtered data length:', filteredData.length);
 
             // For quarterly data, show last 8 quarters (2 years), for monthly show last 24 months
             const recentCount = frequency === 'quarterly' ? 8 : 24;
@@ -393,10 +399,76 @@
             if (mainChart) mainChart.destroy();
             if (recentChart) recentChart.destroy();
 
-            mainChart = createChart('mainChart', filteredData, config);
-            recentChart = createChart('recentChart', recentData, config);
+            // Create configs with filtered data
+            const mainConfig = getChartConfigWithData(series, frequency, breakdown, filteredData);
+            const recentConfig = getChartConfigWithData(series, frequency, breakdown, recentData);
+
+            mainChart = createChart('mainChart', filteredData, mainConfig);
+            recentChart = createChart('recentChart', recentData, recentConfig);
 
             document.getElementById('chartTitle').textContent = config.title;
+        }
+
+        function getChartConfigWithData(series, frequency, breakdown, data) {
+            const s = series === 'headline' ? 'hdln' : 'core';
+            const f = frequency === 'monthly' ? 'mom' : frequency === 'yearly' ? 'yoy' : 'qoq';
+            const freqLabel = frequency === 'monthly' ? 'm/m' : frequency === 'yearly' ? 'y/y' : 'q/q';
+            const dateKey = 'date';
+            let datasets;
+
+            // Build datasets based on breakdown type
+            if (breakdown === 'goods_services' || breakdown === 'goods_services_amb') {
+                const hasAmb = breakdown === 'goods_services_amb';
+                datasets = [
+                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.goods },
+                    { label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply }
+                ];
+                if (hasAmb) {
+                    datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] })), backgroundColor: colors.ambiguous });
+                }
+                datasets.push(
+                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.housing },
+                    { label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supplyH }
+                );
+                if (hasAmb) {
+                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
+                }
+                datasets.push(
+                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.services },
+                    { label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supplyL }
+                );
+                if (hasAmb) {
+                    datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
+                }
+            } else if (breakdown === 'precision') {
+                // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
+                datasets = [
+                    { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
+                    { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
+                    { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                    { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
+                    { label: 'Supply (low precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
+                    { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
+                    { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
+                ];
+            } else {
+                const hasAmb = breakdown === 'ambiguous';
+                // Order: Demand (bottom), Ambiguous (middle), Supply (top)
+                datasets = [
+                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: d[`dem_${s}_${f}`] })), backgroundColor: colors.demand }
+                ];
+                if (hasAmb) {
+                    datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous });
+                }
+                datasets.push({ label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: d[`sup_${s}_${f}`] })), backgroundColor: colors.supply });
+            }
+
+            return {
+                data,
+                dateKey,
+                datasets,
+                title: `Supply and Demand Driven ${series === 'headline' ? 'Headline' : 'Core'} PCE Inflation (${freqLabel})`
+            };
         }
 
         function getChartConfig(series, frequency, breakdown) {
