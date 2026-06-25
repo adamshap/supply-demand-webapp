@@ -420,6 +420,16 @@
             console.log('UpdateCharts called - Series:', series, 'Freq:', frequency, 'Breakdown:', breakdown, 'ShowAmb:', showAmbiguous);
 
             const config = getChartConfig(series, frequency, breakdown, showAmbiguous);
+            console.log('Config datasets:', config.datasets.map(d => d.label));
+            console.log('First data point:', config.data[0]);
+
+            // For core monthly baseline, check a specific data point
+            if (series === 'core' && frequency === 'monthly' && breakdown === 'baseline') {
+                const testPoint = config.data[100];
+                console.log('Test point (row 100):', testPoint);
+                console.log('amb_core_mom value:', testPoint?.amb_core_mom);
+                console.log('Dataset ambiguous values sample:', config.datasets.find(d => d.label === 'Ambiguous')?.data.slice(100, 105));
+            }
 
             // Debug: check first data point for baseline
             if (breakdown === 'baseline' && config.data.length > 100) {
