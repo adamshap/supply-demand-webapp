@@ -292,18 +292,18 @@
 
         // Color scheme matching SF Fed
         const colors = {
-            demand: 'rgb(70, 130, 200)',       // Strong blue
-            supply: 'rgb(240, 100, 100)',      // Strong red
-            ambiguous: 'rgb(255, 200, 120)',   // Strong tan/gold
-            demandHH: 'rgb(30, 70, 130)',      // Darkest blue (very high precision)
-            demandH: 'rgb(50, 100, 165)',      // Dark blue (high precision)
-            demandL: 'rgb(120, 170, 210)',     // Light blue (low precision)
-            supplyHH: 'rgb(180, 50, 50)',      // Darkest red (very high precision)
-            supplyH: 'rgb(210, 70, 70)',       // Dark red (high precision)
-            supplyL: 'rgb(240, 140, 140)',     // Light red (low precision)
-            goods: 'rgb(230, 140, 30)',        // Strong orange
-            housing: 'rgb(180, 110, 180)',     // Strong plum
-            services: 'rgb(70, 130, 200)'      // Strong blue
+            demand: 'rgb(120, 180, 230)',      // Baby blue
+            supply: 'rgb(255, 140, 140)',      // Baby red/pink
+            ambiguous: 'rgb(250, 235, 210)',   // Cream
+            demandHH: 'rgb(60, 120, 180)',     // Darkest baby blue (very high precision)
+            demandH: 'rgb(90, 150, 205)',      // Dark baby blue (high precision)
+            demandL: 'rgb(150, 200, 235)',     // Light baby blue (low precision)
+            supplyHH: 'rgb(210, 90, 90)',      // Darkest baby red (very high precision)
+            supplyH: 'rgb(230, 115, 115)',     // Dark baby red (high precision)
+            supplyL: 'rgb(255, 170, 170)',     // Light baby red (low precision)
+            goods: 'rgb(230, 140, 30)',        // Orange
+            housing: 'rgb(180, 110, 180)',     // Plum
+            services: 'rgb(120, 180, 230)'     // Baby blue
         };
 
         // CSV parsing function
@@ -421,6 +421,13 @@
 
             const config = getChartConfig(series, frequency, breakdown, showAmbiguous);
 
+            // Debug: check first data point for baseline
+            if (breakdown === 'baseline' && config.data.length > 100) {
+                const testPoint = config.data[100];
+                console.log('Sample data point:', testPoint);
+                console.log('Datasets being used:', config.datasets.map(d => d.label));
+            }
+
             // Get slider positions and convert to dates
             const startSlider = parseInt(document.getElementById('startDateSlider').value);
             const endSlider = parseInt(document.getElementById('endDateSlider').value);
@@ -510,12 +517,12 @@
                 // Quarterly data needs to be multiplied by 100 to convert to percentage points
                 const multiplier = (frequency === 'quarterly') ? 100 : 1;
                 datasets = [
-                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: d[`dem_${s}_${f}`] * multiplier })), backgroundColor: colors.demand }
+                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`dem_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.demand }
                 ];
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] * multiplier })), backgroundColor: colors.ambiguous });
+                    datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`amb_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push({ label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: d[`sup_${s}_${f}`] * multiplier })), backgroundColor: colors.supply });
+                datasets.push({ label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`sup_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.supply });
             }
 
             return {
@@ -591,12 +598,12 @@
                 // Quarterly data needs to be multiplied by 100 to convert to percentage points
                 const multiplier = (frequency === 'quarterly') ? 100 : 1;
                 datasets = [
-                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: d[`dem_${s}_${f}`] * multiplier })), backgroundColor: colors.demand }
+                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`dem_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.demand }
                 ];
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] * multiplier })), backgroundColor: colors.ambiguous });
+                    datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`amb_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push({ label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: d[`sup_${s}_${f}`] * multiplier })), backgroundColor: colors.supply });
+                datasets.push({ label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`sup_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.supply });
             }
 
             return {
