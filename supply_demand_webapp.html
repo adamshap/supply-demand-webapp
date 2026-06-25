@@ -27,7 +27,7 @@
         }
 
         header {
-            background-color: #003A63;
+            background-color: #4A7BA7;
             color: white;
             padding: 30px 20px;
             margin-bottom: 30px;
@@ -73,7 +73,7 @@
             display: block;
             font-weight: 600;
             margin-bottom: 10px;
-            color: #003A63;
+            color: #4A7BA7;
             font-size: 0.95em;
         }
 
@@ -89,7 +89,7 @@
         }
 
         .control-group select:hover {
-            border-color: #003A63;
+            border-color: #4A7BA7;
         }
 
         .control-group select:focus {
@@ -147,7 +147,7 @@
         .chart-container h2 {
             font-size: 1.4em;
             margin-bottom: 20px;
-            color: #003A63;
+            color: #4A7BA7;
             font-weight: 600;
         }
 
@@ -157,7 +157,7 @@
         }
 
         .download-btn {
-            background-color: #003A63;
+            background-color: #4A7BA7;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -207,7 +207,7 @@
     <div class="container">
         <div class="main-content">
             <aside class="controls">
-                <h3 style="margin-bottom: 20px; color: #003A63;">Chart Options</h3>
+                <h3 style="margin-bottom: 20px; color: #4A7BA7;">Chart Options</h3>
 
                 <div class="info-box">
                     <p>Select options below to customize the inflation decomposition view.</p>
@@ -285,18 +285,18 @@
 
         // Color scheme matching SF Fed
         const colors = {
-            demand: '#89CFF0',      // Baby blue
-            supply: '#FF9999',      // Baby red
-            ambiguous: '#F5E6D3',   // Cream
-            demandHH: '#4682B4',    // Darkest baby blue (very high precision)
-            demandH: '#6CA6CD',     // Dark baby blue (high precision)
-            demandL: '#B0E0E6',     // Light baby blue (low precision)
-            supplyHH: '#CD5C5C',    // Darkest baby red (very high precision)
-            supplyH: '#F08080',     // Dark baby red (high precision)
-            supplyL: '#FFB6C1',     // Light baby red (low precision)
-            goods: '#FFB347',       // Pastel orange
-            housing: '#DDA0DD',     // Plum
-            services: '#89CFF0'     // Baby blue
+            demand: '#5B9BD5',      // Solid soft blue (Excel blue)
+            supply: '#ED7D31',      // Solid soft orange-red (Excel orange)
+            ambiguous: '#FFC000',   // Solid soft gold/yellow
+            demandHH: '#2E5C8A',    // Dark blue (very high precision)
+            demandH: '#4472C4',     // Medium blue (high precision)
+            demandL: '#8FAADC',     // Light blue (low precision)
+            supplyHH: '#C55A11',    // Dark orange-red (very high precision)
+            supplyH: '#ED7D31',     // Medium orange-red (high precision)
+            supplyL: '#F4B183',     // Light orange-red (low precision)
+            goods: '#70AD47',       // Soft green
+            housing: '#9E480E',     // Soft brown
+            services: '#5B9BD5'     // Soft blue
         };
 
         // CSV parsing function
