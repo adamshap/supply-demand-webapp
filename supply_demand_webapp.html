@@ -194,6 +194,82 @@
             font-size: 0.95em;
             line-height: 1.5;
         }
+
+        /* Mobile responsive styles */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                padding: 20px 15px;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            header p {
+                font-size: 1em;
+            }
+
+            .main-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .controls {
+                width: 100%;
+                padding: 15px;
+                order: 2; /* Move controls below charts on mobile */
+            }
+
+            .charts {
+                order: 1; /* Show charts first on mobile */
+            }
+
+            .chart-wrapper {
+                height: 350px !important;
+            }
+
+            .control-group label {
+                font-size: 0.95em;
+            }
+
+            .control-group input[type="radio"] {
+                margin-right: 5px;
+            }
+
+            .download-btn {
+                font-size: 0.95em;
+                padding: 12px 20px;
+            }
+
+            .info-box {
+                font-size: 0.85em;
+                padding: 10px;
+            }
+
+            .citation {
+                font-size: 0.8em;
+            }
+        }
+
+        /* Extra small phones */
+        @media screen and (max-width: 480px) {
+            header h1 {
+                font-size: 1.3em;
+            }
+
+            .chart-wrapper {
+                height: 300px !important;
+            }
+
+            .control-group select,
+            .control-group input {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
     </style>
 </head>
 <body>
