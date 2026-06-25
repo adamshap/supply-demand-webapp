@@ -489,28 +489,28 @@
             // Build datasets based on breakdown type
             if (breakdown === 'goods') {
                 datasets = [
-                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] * 100 })), backgroundColor: colors.demand }
+                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] * 100 })), backgroundColor: colors.ambiguous });
+                    datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push({ label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] * 100 })), backgroundColor: colors.supply });
+                datasets.push({ label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'services') {
                 datasets = [
-                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] * 100 })), backgroundColor: colors.demand }
+                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] * 100 })), backgroundColor: colors.ambiguous });
+                    datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push({ label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] * 100 })), backgroundColor: colors.supply });
+                datasets.push({ label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'housing') {
                 datasets = [
-                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] * 100 })), backgroundColor: colors.demand }
+                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] * 100 })), backgroundColor: colors.ambiguous });
+                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] * 100 })), backgroundColor: colors.supply });
+                datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'precision') {
                 // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
                 datasets = [
@@ -524,8 +524,7 @@
                 ];
             } else {
                 // Baseline - Order: Demand (bottom), Ambiguous (middle), Supply (top)
-                // Quarterly data needs to be multiplied by 100 to convert to percentage points
-                const multiplier = (frequency === 'quarterly') ? 100 : 1;
+                // All data now in percentage points (no multiplier needed)
 
                 // Build datasets: always include demand and supply
                 datasets = [
@@ -533,7 +532,7 @@
                         label: 'Demand-driven',
                         data: data.map(d => ({
                             x: d.date,
-                            y: (parseFloat(d[`dem_${s}_${f}`]) || 0) * multiplier
+                            y: parseFloat(d[`dem_${s}_${f}`]) || 0
                         })),
                         backgroundColor: colors.demand
                     }
@@ -545,7 +544,7 @@
                         label: 'Ambiguous',
                         data: data.map(d => ({
                             x: d.date,
-                            y: (parseFloat(d[`amb_${s}_${f}`]) || 0) * multiplier
+                            y: parseFloat(d[`amb_${s}_${f}`]) || 0
                         })),
                         backgroundColor: colors.ambiguous
                     });
@@ -556,7 +555,7 @@
                     label: 'Supply-driven',
                     data: data.map(d => ({
                         x: d.date,
-                        y: (parseFloat(d[`sup_${s}_${f}`]) || 0) * multiplier
+                        y: parseFloat(d[`sup_${s}_${f}`]) || 0
                     })),
                     backgroundColor: colors.supply
                 });
@@ -607,28 +606,28 @@
             // Build datasets based on breakdown type
             if (breakdown === 'goods') {
                 datasets = [
-                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] * 100 })), backgroundColor: colors.demand }
+                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] * 100 })), backgroundColor: colors.ambiguous });
+                    datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push({ label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] * 100 })), backgroundColor: colors.supply });
+                datasets.push({ label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'services') {
                 datasets = [
-                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] * 100 })), backgroundColor: colors.demand }
+                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] * 100 })), backgroundColor: colors.ambiguous });
+                    datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push({ label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] * 100 })), backgroundColor: colors.supply });
+                datasets.push({ label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'housing') {
                 datasets = [
-                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] * 100 })), backgroundColor: colors.demand }
+                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] * 100 })), backgroundColor: colors.ambiguous });
+                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] * 100 })), backgroundColor: colors.supply });
+                datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'precision') {
                 // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
                 datasets = [
@@ -642,8 +641,7 @@
                 ];
             } else {
                 // Baseline - Order: Demand (bottom), Ambiguous (middle), Supply (top)
-                // Quarterly data needs to be multiplied by 100 to convert to percentage points
-                const multiplier = (frequency === 'quarterly') ? 100 : 1;
+                // All data now in percentage points (no multiplier needed)
 
                 // Build datasets: always include demand and supply
                 datasets = [
@@ -651,7 +649,7 @@
                         label: 'Demand-driven',
                         data: data.map(d => ({
                             x: d.date,
-                            y: (parseFloat(d[`dem_${s}_${f}`]) || 0) * multiplier
+                            y: parseFloat(d[`dem_${s}_${f}`]) || 0
                         })),
                         backgroundColor: colors.demand
                     }
@@ -663,7 +661,7 @@
                         label: 'Ambiguous',
                         data: data.map(d => ({
                             x: d.date,
-                            y: (parseFloat(d[`amb_${s}_${f}`]) || 0) * multiplier
+                            y: parseFloat(d[`amb_${s}_${f}`]) || 0
                         })),
                         backgroundColor: colors.ambiguous
                     });
@@ -674,7 +672,7 @@
                     label: 'Supply-driven',
                     data: data.map(d => ({
                         x: d.date,
-                        y: (parseFloat(d[`sup_${s}_${f}`]) || 0) * multiplier
+                        y: parseFloat(d[`sup_${s}_${f}`]) || 0
                     })),
                     backgroundColor: colors.supply
                 });
