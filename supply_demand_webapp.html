@@ -234,10 +234,14 @@
                     <label>Breakdown:</label>
                     <select id="breakdown">
                         <option value="ambiguous">Baseline (with ambiguous)</option>
-                        <option value="goods_services_amb">Goods/Housing/Services (with ambiguous)</option>
                         <option value="precision">Precision levels</option>
+                        <option value="goods_amb">Goods (with ambiguous)</option>
+                        <option value="services_amb">Services (with ambiguous)</option>
+                        <option value="housing_amb">Housing (with ambiguous)</option>
                         <option value="baseline">Baseline (no ambiguous)</option>
-                        <option value="goods_services">Goods/Housing/Services (no ambiguous)</option>
+                        <option value="goods">Goods (no ambiguous)</option>
+                        <option value="services">Services (no ambiguous)</option>
+                        <option value="housing">Housing (no ambiguous)</option>
                     </select>
                 </div>
 
@@ -285,18 +289,18 @@
 
         // Color scheme matching SF Fed
         const colors = {
-            demand: '#89CFF0',      // Baby blue
-            supply: '#FF9999',      // Baby red (pink)
-            ambiguous: '#F5E6D3',   // Cream
-            demandHH: '#4682B4',    // Darkest baby blue (very high precision)
-            demandH: '#6CA6CD',     // Dark baby blue (high precision)
-            demandL: '#B0E0E6',     // Light baby blue (low precision)
-            supplyHH: '#CD5C5C',    // Darkest baby red (very high precision)
-            supplyH: '#F08080',     // Dark baby red (high precision)
-            supplyL: '#FFB6C1',     // Light baby red (low precision)
-            goods: '#FFB347',       // Pastel orange
-            housing: '#DDA0DD',     // Plum
-            services: '#89CFF0'     // Baby blue
+            demand: 'rgba(137, 207, 240, 1)',      // Baby blue - fully opaque
+            supply: 'rgba(255, 153, 153, 1)',      // Baby red (pink) - fully opaque
+            ambiguous: 'rgba(245, 230, 211, 1)',   // Cream - fully opaque
+            demandHH: 'rgba(70, 130, 180, 1)',     // Darkest baby blue (very high precision)
+            demandH: 'rgba(108, 166, 205, 1)',     // Dark baby blue (high precision)
+            demandL: 'rgba(176, 224, 230, 1)',     // Light baby blue (low precision)
+            supplyHH: 'rgba(205, 92, 92, 1)',      // Darkest baby red (very high precision)
+            supplyH: 'rgba(240, 128, 128, 1)',     // Dark baby red (high precision)
+            supplyL: 'rgba(255, 182, 193, 1)',     // Light baby red (low precision)
+            goods: 'rgba(255, 179, 71, 1)',        // Pastel orange
+            housing: 'rgba(221, 160, 221, 1)',     // Plum
+            services: 'rgba(137, 207, 240, 1)'     // Baby blue
         };
 
         // CSV parsing function
@@ -417,29 +421,33 @@
             let datasets;
 
             // Build datasets based on breakdown type
-            if (breakdown === 'goods_services' || breakdown === 'goods_services_amb') {
-                const hasAmb = breakdown === 'goods_services_amb';
+            if (breakdown === 'goods' || breakdown === 'goods_amb') {
+                const hasAmb = breakdown === 'goods_amb';
                 datasets = [
-                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.goods },
-                    { label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply }
+                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (hasAmb) {
                     datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push(
-                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.housing },
-                    { label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supplyH }
-                );
-                if (hasAmb) {
-                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
-                }
-                datasets.push(
-                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.services },
-                    { label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supplyL }
-                );
+                datasets.push({ label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply });
+            } else if (breakdown === 'services' || breakdown === 'services_amb') {
+                const hasAmb = breakdown === 'services_amb';
+                datasets = [
+                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.demand }
+                ];
                 if (hasAmb) {
                     datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
+                datasets.push({ label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supply });
+            } else if (breakdown === 'housing' || breakdown === 'housing_amb') {
+                const hasAmb = breakdown === 'housing_amb';
+                datasets = [
+                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.demand }
+                ];
+                if (hasAmb) {
+                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
+                }
+                datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'precision') {
                 // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
                 datasets = [
@@ -483,12 +491,13 @@
                 sheetName = 'Quarterly';
             } else if (breakdown === 'ambiguous') {
                 sheetName = 'Ambiguous';
-            } else if (breakdown === 'goods_services') {
-                sheetName = 'Goods_Services';
-            } else if (breakdown === 'goods_services_amb') {
-                sheetName = 'Goods_Services_Ambiguous';
             } else if (breakdown === 'precision') {
                 sheetName = 'Precision';
+            } else if (breakdown === 'goods' || breakdown === 'goods_amb' ||
+                       breakdown === 'services' || breakdown === 'services_amb' ||
+                       breakdown === 'housing' || breakdown === 'housing_amb') {
+                // All goods/services/housing breakdowns use the ambiguous sheet
+                sheetName = 'Goods_Services_Ambiguous';
             } else {
                 sheetName = 'Baseline';
             }
@@ -496,29 +505,33 @@
             const data = allData[sheetName] || [];
 
             // Build datasets based on breakdown type
-            if (breakdown === 'goods_services' || breakdown === 'goods_services_amb') {
-                const hasAmb = breakdown === 'goods_services_amb';
+            if (breakdown === 'goods' || breakdown === 'goods_amb') {
+                const hasAmb = breakdown === 'goods_amb';
                 datasets = [
-                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.goods },
-                    { label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply }
+                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.demand }
                 ];
                 if (hasAmb) {
                     datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
-                datasets.push(
-                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.housing },
-                    { label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supplyH }
-                );
-                if (hasAmb) {
-                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
-                }
-                datasets.push(
-                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.services },
-                    { label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supplyL }
-                );
+                datasets.push({ label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply });
+            } else if (breakdown === 'services' || breakdown === 'services_amb') {
+                const hasAmb = breakdown === 'services_amb';
+                datasets = [
+                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.demand }
+                ];
                 if (hasAmb) {
                     datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
                 }
+                datasets.push({ label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supply });
+            } else if (breakdown === 'housing' || breakdown === 'housing_amb') {
+                const hasAmb = breakdown === 'housing_amb';
+                datasets = [
+                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.demand }
+                ];
+                if (hasAmb) {
+                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
+                }
+                datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'precision') {
                 // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
                 datasets = [
@@ -552,6 +565,12 @@
 
         function createChart(canvasId, data, config) {
             const ctx = document.getElementById(canvasId).getContext('2d');
+
+            // Add border and ensure full opacity for each dataset
+            config.datasets.forEach(dataset => {
+                dataset.borderColor = dataset.backgroundColor;
+                dataset.borderWidth = 0.5;
+            });
 
             return new Chart(ctx, {
                 type: 'bar',
@@ -591,8 +610,12 @@
                             position: 'bottom',
                             labels: {
                                 boxWidth: 12,
-                                padding: 10
+                                padding: 10,
+                                usePointStyle: false
                             }
+                        },
+                        colors: {
+                            enabled: false
                         },
                         tooltip: {
                             mode: 'index',
