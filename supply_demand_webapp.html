@@ -195,6 +195,16 @@
             line-height: 1.5;
         }
 
+        /* Mobile toggle button - only visible on mobile */
+        .mobile-toggle {
+            display: none;
+        }
+
+        /* Desktop-only elements */
+        .desktop-only {
+            display: block;
+        }
+
         /* Mobile responsive styles */
         @media screen and (max-width: 768px) {
             .container {
@@ -222,6 +232,49 @@
                 width: 100%;
                 padding: 15px;
                 order: 2; /* Move controls below charts on mobile */
+                position: sticky;
+                bottom: 0;
+                z-index: 100;
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+
+            .controls.collapsed {
+                max-height: 60px;
+                overflow: hidden;
+            }
+
+            .mobile-toggle {
+                display: block;
+                width: 100%;
+                padding: 15px;
+                background: #4A7BA7;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 1.1em;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .mobile-toggle:active {
+                background: #3d6a8f;
+            }
+
+            .desktop-only {
+                display: none !important;
+            }
+
+            .controls-content {
+                display: block;
+            }
+
+            .controls.collapsed .controls-content {
+                display: none;
             }
 
             .charts {
@@ -233,25 +286,85 @@
             }
 
             .control-group label {
-                font-size: 0.95em;
+                font-size: 1em;
+                padding: 8px 0;
+                display: block;
             }
 
-            .control-group input[type="radio"] {
-                margin-right: 5px;
+            /* Larger touch targets for radio buttons and checkboxes */
+            .control-group input[type="radio"],
+            .control-group input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                margin-right: 10px;
+                cursor: pointer;
+            }
+
+            .control-group label {
+                cursor: pointer;
+                padding: 10px 0;
+            }
+
+            /* Better slider styling for touch */
+            input[type="range"] {
+                height: 40px;
+                -webkit-appearance: none;
+                appearance: none;
+                background: transparent;
+                cursor: pointer;
+            }
+
+            input[type="range"]::-webkit-slider-track {
+                background: #ddd;
+                height: 8px;
+                border-radius: 4px;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 28px;
+                height: 28px;
+                background: #4A7BA7;
+                border-radius: 50%;
+                cursor: pointer;
+                margin-top: -10px;
+            }
+
+            input[type="range"]::-moz-range-track {
+                background: #ddd;
+                height: 8px;
+                border-radius: 4px;
+            }
+
+            input[type="range"]::-moz-range-thumb {
+                width: 28px;
+                height: 28px;
+                background: #4A7BA7;
+                border-radius: 50%;
+                cursor: pointer;
+                border: none;
             }
 
             .download-btn {
-                font-size: 0.95em;
-                padding: 12px 20px;
+                font-size: 1em;
+                padding: 15px 20px;
+                margin-top: 12px;
             }
 
             .info-box {
-                font-size: 0.85em;
-                padding: 10px;
+                font-size: 0.9em;
+                padding: 12px;
             }
 
             .citation {
                 font-size: 0.8em;
+            }
+
+            /* Better select styling for touch */
+            .control-group select {
+                padding: 12px;
+                font-size: 16px;
             }
         }
 
@@ -283,10 +396,16 @@
 
     <div class="container">
         <div class="main-content">
-            <aside class="controls">
-                <h3 style="margin-bottom: 20px; color: #4A7BA7;">Chart Options</h3>
+            <aside class="controls collapsed" id="controlsPanel">
+                <button class="mobile-toggle" id="mobileToggle" onclick="toggleControls()">
+                    <span>Chart Options</span>
+                    <span id="toggleIcon">▼</span>
+                </button>
 
-                <div class="info-box">
+                <div class="controls-content">
+                    <h3 style="margin-bottom: 20px; color: #4A7BA7; display: none;" class="desktop-only">Chart Options</h3>
+
+                    <div class="info-box">
                     <p>Select options below to customize the inflation decomposition view.</p>
                 </div>
 
@@ -337,6 +456,7 @@
 
                 <button class="download-btn" onclick="downloadFullDataset()">Download Full Dataset (Excel)</button>
                 <button class="download-btn" onclick="downloadViewCSV()" style="margin-top: 10px;">Download Current View (CSV)</button>
+                </div>
             </aside>
 
             <main class="charts">
@@ -363,6 +483,32 @@
     </footer>
 
     <script>
+        // Mobile controls toggle
+        function toggleControls() {
+            const panel = document.getElementById('controlsPanel');
+            const icon = document.getElementById('toggleIcon');
+
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                icon.textContent = '▲';
+            } else {
+                panel.classList.add('collapsed');
+                icon.textContent = '▼';
+            }
+        }
+
+        // Auto-expand controls on desktop, start collapsed on mobile
+        function checkScreenSize() {
+            const panel = document.getElementById('controlsPanel');
+            if (window.innerWidth > 768) {
+                panel.classList.remove('collapsed');
+            }
+        }
+
+        // Run on load and resize
+        window.addEventListener('load', checkScreenSize);
+        window.addEventListener('resize', checkScreenSize);
+
         let allData = {};
         let mainChart = null;
         let recentChart = null;
@@ -820,11 +966,14 @@
                     },
                     plugins: {
                         legend: {
-                            position: 'bottom',
+                            position: window.innerWidth <= 768 ? 'top' : 'bottom',
                             labels: {
-                                boxWidth: 12,
-                                padding: 10,
-                                usePointStyle: false
+                                boxWidth: window.innerWidth <= 768 ? 15 : 12,
+                                padding: window.innerWidth <= 768 ? 12 : 10,
+                                usePointStyle: false,
+                                font: {
+                                    size: window.innerWidth <= 768 ? 13 : 12
+                                }
                             }
                         },
                         colors: {
