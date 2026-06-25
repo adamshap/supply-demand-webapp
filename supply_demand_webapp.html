@@ -567,6 +567,16 @@
 
             const data = allData[sheetName] || [];
 
+            // Debug: Check if we're loading the right data
+            if (series === 'core' && breakdown === 'baseline' && frequency === 'monthly' && showAmbiguous) {
+                console.log('=== CORE MONTHLY BASELINE DEBUG ===');
+                console.log('Sheet name:', sheetName);
+                console.log('Data length:', data.length);
+                console.log('First row columns:', Object.keys(data[0] || {}));
+                console.log('First row amb_core_mom:', data[0]?.amb_core_mom);
+                console.log('Row 100 amb_core_mom:', data[100]?.amb_core_mom);
+            }
+
             // Build datasets based on breakdown type
             if (breakdown === 'goods') {
                 datasets = [
