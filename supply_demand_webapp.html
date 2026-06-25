@@ -346,6 +346,53 @@
                 border: none;
             }
 
+            /* Edge/IE specific slider styles */
+            input[type="range"]::-ms-track {
+                width: 100%;
+                height: 8px;
+                background: transparent;
+                border-color: transparent;
+                color: transparent;
+                cursor: pointer;
+            }
+
+            input[type="range"]::-ms-fill-lower {
+                background: #4A7BA7;
+                border-radius: 4px;
+            }
+
+            input[type="range"]::-ms-fill-upper {
+                background: #ddd;
+                border-radius: 4px;
+            }
+
+            input[type="range"]::-ms-thumb {
+                width: 28px;
+                height: 28px;
+                background: #4A7BA7;
+                border-radius: 50%;
+                cursor: pointer;
+                border: none;
+                margin-top: 0;
+            }
+
+            /* Focus states for accessibility */
+            input[type="range"]:focus {
+                outline: none;
+            }
+
+            input[type="range"]:focus::-webkit-slider-thumb {
+                box-shadow: 0 0 0 3px rgba(74, 123, 167, 0.3);
+            }
+
+            input[type="range"]:focus::-moz-range-thumb {
+                box-shadow: 0 0 0 3px rgba(74, 123, 167, 0.3);
+            }
+
+            input[type="range"]:focus::-ms-thumb {
+                box-shadow: 0 0 0 3px rgba(74, 123, 167, 0.3);
+            }
+
             .download-btn {
                 font-size: 1em;
                 padding: 15px 20px;
@@ -562,8 +609,9 @@
             return data;
         }
 
-        // Load all CSV files with cache busting
-        const cacheBuster = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        // Load all CSV files with cache busting (refreshes every hour)
+        const now = new Date();
+        const cacheBuster = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}`;
         Promise.all([
             fetch(`supply_demand_baseline.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
             fetch(`supply_demand_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
