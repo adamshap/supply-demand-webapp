@@ -224,9 +224,9 @@
                 <div class="control-group">
                     <label>Frequency:</label>
                     <div class="radio-group">
-                        <label><input type="radio" name="frequency" value="monthly" checked> Monthly (m/m)</label>
-                        <label><input type="radio" name="frequency" value="yearly"> Year-over-year (y/y)</label>
-                        <label><input type="radio" name="frequency" value="quarterly"> Quarterly (q/q)</label>
+                        <label><input type="radio" name="frequency" value="yearly" checked> Year-over-year (y/y)</label>
+                        <label><input type="radio" name="frequency" value="monthly"> Monthly (m/m)</label>
+                        <label id="quarterlyOption"><input type="radio" name="frequency" value="quarterly" id="quarterlyRadio"> Quarterly (q/q) <span id="quarterlyNote" style="font-size: 0.85em; color: #999;"></span></label>
                     </div>
                 </div>
 
@@ -359,21 +359,65 @@
             updateCharts();
         }).catch(error => console.error('Error loading data:', error));
 
+        // Initialize quarterly availability on load
+        updateQuarterlyAvailability();
+
         // Event listeners
-        document.querySelectorAll('input[name="series"], input[name="frequency"]').forEach(input => {
+        document.querySelectorAll('input[name="series"]').forEach(input => {
             input.addEventListener('change', updateCharts);
         });
+        document.querySelectorAll('input[name="frequency"]').forEach(input => {
+            input.addEventListener('change', function() {
+                updateQuarterlyAvailability();
+                updateCharts();
+            });
+        });
 
-        document.getElementById('breakdown').addEventListener('change', updateCharts);
+        document.getElementById('breakdown').addEventListener('change', function() {
+            updateQuarterlyAvailability();
+            updateCharts();
+        });
         document.getElementById('showAmbiguous').addEventListener('change', updateCharts);
         document.getElementById('startDateSlider').addEventListener('input', updateCharts);
         document.getElementById('endDateSlider').addEventListener('input', updateCharts);
+
+        function updateQuarterlyAvailability() {
+            const breakdown = document.getElementById('breakdown').value;
+            const quarterlyRadio = document.getElementById('quarterlyRadio');
+            const quarterlyNote = document.getElementById('quarterlyNote');
+            const frequency = document.querySelector('input[name="frequency"]:checked').value;
+            const showAmbiguousCheckbox = document.getElementById('showAmbiguous').parentElement.parentElement;
+
+            // Quarterly is only available for baseline
+            if (breakdown === 'baseline') {
+                quarterlyRadio.disabled = false;
+                quarterlyNote.textContent = '';
+
+                // Hide ambiguous checkbox for quarterly (no ambiguous data in quarterly sheet)
+                if (frequency === 'quarterly') {
+                    showAmbiguousCheckbox.style.display = 'none';
+                } else {
+                    showAmbiguousCheckbox.style.display = 'block';
+                }
+            } else {
+                quarterlyRadio.disabled = true;
+                quarterlyNote.textContent = '(baseline only)';
+                showAmbiguousCheckbox.style.display = 'block';
+
+                // If quarterly is currently selected, switch to yearly
+                if (frequency === 'quarterly') {
+                    document.querySelector('input[name="frequency"][value="yearly"]').checked = true;
+                }
+            }
+        }
 
         function updateCharts() {
             const series = document.querySelector('input[name="series"]:checked').value;
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
             const breakdown = document.getElementById('breakdown').value;
             const showAmbiguous = document.getElementById('showAmbiguous').checked;
+
+            console.log('UpdateCharts called - Series:', series, 'Freq:', frequency, 'Breakdown:', breakdown, 'ShowAmb:', showAmbiguous);
 
             const config = getChartConfig(series, frequency, breakdown, showAmbiguous);
 
