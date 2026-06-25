@@ -526,13 +526,40 @@
                 // Baseline - Order: Demand (bottom), Ambiguous (middle), Supply (top)
                 // Quarterly data needs to be multiplied by 100 to convert to percentage points
                 const multiplier = (frequency === 'quarterly') ? 100 : 1;
+
+                // Build datasets: always include demand and supply
                 datasets = [
-                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`dem_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.demand }
+                    {
+                        label: 'Demand-driven',
+                        data: data.map(d => ({
+                            x: d.date,
+                            y: (parseFloat(d[`dem_${s}_${f}`]) || 0) * multiplier
+                        })),
+                        backgroundColor: colors.demand
+                    }
                 ];
+
+                // Add ambiguous in the middle (only when showAmbiguous is true and using Ambiguous sheet)
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`amb_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.ambiguous });
+                    datasets.push({
+                        label: 'Ambiguous',
+                        data: data.map(d => ({
+                            x: d.date,
+                            y: (parseFloat(d[`amb_${s}_${f}`]) || 0) * multiplier
+                        })),
+                        backgroundColor: colors.ambiguous
+                    });
                 }
-                datasets.push({ label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`sup_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.supply });
+
+                // Always add supply on top
+                datasets.push({
+                    label: 'Supply-driven',
+                    data: data.map(d => ({
+                        x: d.date,
+                        y: (parseFloat(d[`sup_${s}_${f}`]) || 0) * multiplier
+                    })),
+                    backgroundColor: colors.supply
+                });
             }
 
             return {
@@ -617,13 +644,40 @@
                 // Baseline - Order: Demand (bottom), Ambiguous (middle), Supply (top)
                 // Quarterly data needs to be multiplied by 100 to convert to percentage points
                 const multiplier = (frequency === 'quarterly') ? 100 : 1;
+
+                // Build datasets: always include demand and supply
                 datasets = [
-                    { label: 'Demand-driven', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`dem_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.demand }
+                    {
+                        label: 'Demand-driven',
+                        data: data.map(d => ({
+                            x: d.date,
+                            y: (parseFloat(d[`dem_${s}_${f}`]) || 0) * multiplier
+                        })),
+                        backgroundColor: colors.demand
+                    }
                 ];
+
+                // Add ambiguous in the middle (only when showAmbiguous is true and using Ambiguous sheet)
                 if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`amb_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.ambiguous });
+                    datasets.push({
+                        label: 'Ambiguous',
+                        data: data.map(d => ({
+                            x: d.date,
+                            y: (parseFloat(d[`amb_${s}_${f}`]) || 0) * multiplier
+                        })),
+                        backgroundColor: colors.ambiguous
+                    });
                 }
-                datasets.push({ label: 'Supply-driven', data: data.map(d => ({ x: d.date, y: (parseFloat(d[`sup_${s}_${f}`]) || 0) * multiplier })), backgroundColor: colors.supply });
+
+                // Always add supply on top
+                datasets.push({
+                    label: 'Supply-driven',
+                    data: data.map(d => ({
+                        x: d.date,
+                        y: (parseFloat(d[`sup_${s}_${f}`]) || 0) * multiplier
+                    })),
+                    backgroundColor: colors.supply
+                });
             }
 
             return {
