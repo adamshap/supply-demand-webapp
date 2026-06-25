@@ -294,7 +294,7 @@
         const colors = {
             demand: 'rgb(120, 180, 230)',      // Baby blue
             supply: 'rgb(255, 140, 140)',      // Baby red/pink
-            ambiguous: 'rgb(255, 0, 255)',     // BRIGHT MAGENTA FOR TESTING
+            ambiguous: 'rgb(250, 235, 210)',   // Cream
             demandHH: 'rgb(60, 120, 180)',     // Darkest baby blue (very high precision)
             demandH: 'rgb(90, 150, 205)',      // Dark baby blue (high precision)
             demandL: 'rgb(150, 200, 235)',     // Light baby blue (low precision)
@@ -309,7 +309,7 @@
         // CSV parsing function
         function parseCSV(text) {
             const lines = text.trim().split('\n');
-            const headers = lines[0].split(',');
+            const headers = lines[0].split(',').map(h => h.trim());  // Trim whitespace and \r
             const data = [];
 
             for (let i = 1; i < lines.length; i++) {
