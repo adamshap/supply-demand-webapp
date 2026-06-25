@@ -251,14 +251,22 @@
                 background: #4A7BA7;
                 color: white;
                 border: none;
-                border-radius: 6px;
+                border-radius: 6px 6px 0 0;
                 font-size: 1.1em;
                 font-weight: 600;
                 cursor: pointer;
-                margin-bottom: 15px;
+                margin-bottom: 0;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            .controls.collapsed .mobile-toggle {
+                border-radius: 6px;
+                margin-bottom: 0;
             }
 
             .mobile-toggle:active {
@@ -271,6 +279,8 @@
 
             .controls-content {
                 display: block;
+                padding-top: 15px;
+                background: white;
             }
 
             .controls.collapsed .controls-content {
