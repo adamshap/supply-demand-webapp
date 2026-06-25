@@ -531,17 +531,19 @@
 
             let sheetName, dateKey = 'date', datasets;
 
-            // Determine which sheet to use - always use the ambiguous sheets as they have all data
+            // Determine which sheet to use based on whether ambiguous is shown
             if (frequency === 'quarterly') {
                 sheetName = 'Quarterly';
             } else if (breakdown === 'baseline') {
-                sheetName = 'Ambiguous';
+                // For baseline: use Ambiguous sheet if showing ambiguous, otherwise Baseline sheet
+                sheetName = showAmbiguous ? 'Ambiguous' : 'Baseline';
             } else if (breakdown === 'precision') {
                 sheetName = 'Precision';
             } else if (breakdown === 'goods' || breakdown === 'services' || breakdown === 'housing') {
-                sheetName = 'Goods_Services_Ambiguous';
+                // For goods/services/housing: use ambiguous sheet if showing ambiguous, otherwise regular
+                sheetName = showAmbiguous ? 'Goods_Services_Ambiguous' : 'Goods_Services';
             } else {
-                sheetName = 'Ambiguous';
+                sheetName = showAmbiguous ? 'Ambiguous' : 'Baseline';
             }
 
             const data = allData[sheetName] || [];
