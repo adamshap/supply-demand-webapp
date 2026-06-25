@@ -308,8 +308,22 @@
                 const row = {};
                 headers.forEach((header, index) => {
                     const value = values[index];
-                    // Try to parse as number, otherwise keep as string
-                    row[header] = isNaN(value) || value === '' ? value : parseFloat(value);
+                    if (header === 'date') {
+                        // Convert Stata date format (1969m1, 1969q1) to proper date
+                        if (value.includes('m')) {
+                            const [year, month] = value.split('m');
+                            row[header] = `${year}-${month.padStart(2, '0')}-01`;
+                        } else if (value.includes('q')) {
+                            const [year, quarter] = value.split('q');
+                            const month = (parseInt(quarter) - 1) * 3 + 1;
+                            row[header] = `${year}-${month.toString().padStart(2, '0')}-01`;
+                        } else {
+                            row[header] = value;
+                        }
+                    } else {
+                        // Try to parse as number, otherwise keep as string
+                        row[header] = isNaN(value) || value === '' ? value : parseFloat(value);
+                    }
                 });
                 data.push(row);
             }
