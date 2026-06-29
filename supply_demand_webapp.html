@@ -990,11 +990,27 @@
                 });
             }
 
+            // Generate title based on breakdown
+            let title;
+            const seriesLabel = series === 'headline' ? 'Headline' : 'Core';
+
+            if (breakdown === 'goods') {
+                title = `Contribution of Goods to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
+            } else if (breakdown === 'services') {
+                title = `Contribution of Services (ex. Housing) to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
+            } else if (breakdown === 'housing') {
+                title = `Contribution of Housing to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
+            } else if (breakdown === 'precision') {
+                title = `Supply and Demand Driven ${seriesLabel} PCE Inflation by Precision Level (${freqLabel})`;
+            } else {
+                title = `Supply and Demand Driven ${seriesLabel} PCE Inflation (${freqLabel})`;
+            }
+
             return {
                 data,
                 dateKey,
                 datasets,
-                title: `Supply and Demand Driven ${series === 'headline' ? 'Headline' : 'Core'} PCE Inflation (${freqLabel})`
+                title
             };
         }
 
@@ -1125,11 +1141,27 @@
                 });
             }
 
+            // Generate title based on breakdown
+            let title;
+            const seriesLabel = series === 'headline' ? 'Headline' : 'Core';
+
+            if (breakdown === 'goods') {
+                title = `Contribution of Goods to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
+            } else if (breakdown === 'services') {
+                title = `Contribution of Services (ex. Housing) to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
+            } else if (breakdown === 'housing') {
+                title = `Contribution of Housing to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
+            } else if (breakdown === 'precision') {
+                title = `Supply and Demand Driven ${seriesLabel} PCE Inflation by Precision Level (${freqLabel})`;
+            } else {
+                title = `Supply and Demand Driven ${seriesLabel} PCE Inflation (${freqLabel})`;
+            }
+
             return {
                 data,
                 dateKey,
                 datasets,
-                title: `Supply and Demand Driven ${series === 'headline' ? 'Headline' : 'Core'} PCE Inflation (${freqLabel})`
+                title
             };
         }
 
