@@ -717,12 +717,12 @@
         const now = new Date();
         const cacheBuster = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}`;
         Promise.all([
-            fetch(`supply_demand_baseline.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_quarterly.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_goods_services.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_goods_services_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_precision.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV)
+            fetch(`public/supply_demand_baseline.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`public/supply_demand_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`public/supply_demand_quarterly.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`public/supply_demand_goods_services.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`public/supply_demand_goods_services_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`public/supply_demand_precision.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV)
         ]).then(([baseline, ambiguous, quarterly, goodsServices, goodsServicesAmb, precision]) => {
             allData = {
                 'Baseline': baseline,
@@ -819,7 +819,10 @@
 
             console.log('UpdateCharts called - Series:', series, 'Freq:', frequency, 'Breakdown:', breakdown, 'ShowAmb:', showAmbiguous);
 
-            const config = getChartConfig(series, frequency, breakdown, showAmbiguous);
+            // Get precision filter value (needed for initial config)
+            const mainPrecisionFilterInitial = document.querySelector('input[name="mainPrecisionFilter"]:checked')?.value || 'all';
+
+            const config = getChartConfig(series, frequency, breakdown, showAmbiguous, mainPrecisionFilterInitial);
             console.log('Config datasets:', config.datasets.map(d => d.label));
             console.log('First data point:', config.data[0]);
 
@@ -993,7 +996,7 @@
             };
         }
 
-        function getChartConfig(series, frequency, breakdown, showAmbiguous) {
+        function getChartConfig(series, frequency, breakdown, showAmbiguous, precisionFilter = 'all') {
             const s = series === 'headline' ? 'hdln' : 'core';
             const f = frequency === 'monthly' ? 'mom' : frequency === 'yearly' ? 'yoy' : 'qoq';
             const freqLabel = frequency === 'monthly' ? 'm/m' : frequency === 'yearly' ? 'y/y' : 'q/q';
