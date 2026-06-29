@@ -924,25 +924,23 @@
                 datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'precision') {
                 // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
-                // Apply precision filter
+                // Apply precision filter (ambiguous is lowest precision, excluded from high filters)
                 if (precisionFilter === 'very_high') {
-                    // Only very high precision
+                    // Only very high precision (no ambiguous - it's lowest precision)
                     datasets = [
                         { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
                         { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                     ];
                 } else if (precisionFilter === 'high_and_above') {
-                    // High and very high precision
+                    // High and very high precision (no ambiguous - it's lowest precision)
                     datasets = [
                         { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
                         { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
                         { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
                         { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                     ];
                 } else {
-                    // All precision levels (default)
+                    // All precision levels (default) - includes ambiguous as lowest precision
                     datasets = [
                         { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
                         { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
@@ -1061,25 +1059,23 @@
                 datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'precision') {
                 // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
-                // Apply precision filter
+                // Apply precision filter (ambiguous is lowest precision, excluded from high filters)
                 if (precisionFilter === 'very_high') {
-                    // Only very high precision
+                    // Only very high precision (no ambiguous - it's lowest precision)
                     datasets = [
                         { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
                         { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                     ];
                 } else if (precisionFilter === 'high_and_above') {
-                    // High and very high precision
+                    // High and very high precision (no ambiguous - it's lowest precision)
                     datasets = [
                         { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
                         { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
                         { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
                         { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                     ];
                 } else {
-                    // All precision levels (default)
+                    // All precision levels (default) - includes ambiguous as lowest precision
                     datasets = [
                         { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
                         { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
