@@ -602,8 +602,8 @@
                             <h4>Precision Filter:</h4>
                             <div class="precision-filters-group">
                                 <label><input type="radio" name="mainPrecisionFilter" value="all" checked> All precision levels</label>
-                                <label><input type="radio" name="mainPrecisionFilter" value="high_and_above"> High precision</label>
-                                <label><input type="radio" name="mainPrecisionFilter" value="very_high"> Very high precision</label>
+                                <label><input type="radio" name="mainPrecisionFilter" value="high_and_above"> High precision decomposition</label>
+                                <label><input type="radio" name="mainPrecisionFilter" value="very_high"> Very high precision decomposition</label>
                             </div>
                         </div>
                     </div>
@@ -619,8 +619,8 @@
                             <h4>Precision Filter:</h4>
                             <div class="precision-filters-group">
                                 <label><input type="radio" name="recentPrecisionFilter" value="all" checked> All precision levels</label>
-                                <label><input type="radio" name="recentPrecisionFilter" value="high_and_above"> High precision</label>
-                                <label><input type="radio" name="recentPrecisionFilter" value="very_high"> Very high precision</label>
+                                <label><input type="radio" name="recentPrecisionFilter" value="high_and_above"> High precision decomposition</label>
+                                <label><input type="radio" name="recentPrecisionFilter" value="very_high"> Very high precision decomposition</label>
                             </div>
                         </div>
                     </div>
@@ -936,16 +936,20 @@
                         { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                     ];
                 } else if (precisionFilter === 'high_and_above') {
-                    // High precision: combine ambiguous + low precision into expanded ambiguous
+                    // High precision decomposition: merge high + very high precision, expand ambiguous with low precision
                     datasets = [
-                        { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                        { label: 'Demand (high to very high precision)', data: data.map(d => ({
+                            x: d.date,
+                            y: (d[`dem_H_${s}_${f}`] || 0) + (d[`dem_HH_${s}_${f}`] || 0)
+                        })), backgroundColor: colors.demandH },
                         { label: 'Ambiguous', data: data.map(d => ({
                             x: d.date,
                             y: (d[`amb_${s}_${f}`] || 0) + (d[`dem_L_${s}_${f}`] || 0) + (d[`sup_L_${s}_${f}`] || 0)
                         })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
+                        { label: 'Supply (high to very high precision)', data: data.map(d => ({
+                            x: d.date,
+                            y: (d[`sup_H_${s}_${f}`] || 0) + (d[`sup_HH_${s}_${f}`] || 0)
+                        })), backgroundColor: colors.supplyH }
                     ];
                 } else {
                     // All precision levels (default) - includes ambiguous as lowest precision
@@ -1095,16 +1099,20 @@
                         { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                     ];
                 } else if (precisionFilter === 'high_and_above') {
-                    // High precision: combine ambiguous + low precision into expanded ambiguous
+                    // High precision decomposition: merge high + very high precision, expand ambiguous with low precision
                     datasets = [
-                        { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                        { label: 'Demand (high to very high precision)', data: data.map(d => ({
+                            x: d.date,
+                            y: (d[`dem_H_${s}_${f}`] || 0) + (d[`dem_HH_${s}_${f}`] || 0)
+                        })), backgroundColor: colors.demandH },
                         { label: 'Ambiguous', data: data.map(d => ({
                             x: d.date,
                             y: (d[`amb_${s}_${f}`] || 0) + (d[`dem_L_${s}_${f}`] || 0) + (d[`sup_L_${s}_${f}`] || 0)
                         })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
+                        { label: 'Supply (high to very high precision)', data: data.map(d => ({
+                            x: d.date,
+                            y: (d[`sup_H_${s}_${f}`] || 0) + (d[`sup_HH_${s}_${f}`] || 0)
+                        })), backgroundColor: colors.supplyH }
                     ];
                 } else {
                     // All precision levels (default) - includes ambiguous as lowest precision
