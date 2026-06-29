@@ -149,9 +149,14 @@
             position: relative;
         }
 
+        .chart-header {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
         .chart-container h2 {
             font-size: 1.4em;
-            margin-bottom: 20px;
+            margin-bottom: 0;
             color: #4A7BA7;
             font-weight: 600;
         }
@@ -163,8 +168,8 @@
 
         .precision-filters {
             position: absolute;
-            top: 25px;
-            right: 25px;
+            top: 0;
+            right: 0;
             background: white;
             border: 2px solid #4A7BA7;
             border-radius: 6px;
@@ -172,6 +177,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             z-index: 10;
             display: none;
+            min-width: 240px;
         }
 
         .precision-filters.visible {
@@ -471,18 +477,29 @@
             }
 
             .precision-filters {
-                top: 15px;
-                right: 15px;
-                padding: 10px;
-                max-width: 200px;
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 15px;
+                padding: 12px;
+                max-width: 100%;
             }
 
             .precision-filters h4 {
-                font-size: 0.85em;
+                font-size: 0.9em;
+                margin-bottom: 12px;
             }
 
             .precision-filters label {
-                font-size: 0.8em;
+                font-size: 0.9em;
+                padding: 8px 0;
+                margin-bottom: 10px;
+            }
+
+            .precision-filters input[type="radio"] {
+                width: 20px;
+                height: 20px;
+                margin-right: 12px;
             }
         }
 
@@ -579,12 +596,14 @@
 
             <main class="charts">
                 <div class="chart-container">
-                    <h2 id="chartTitle">Supply and Demand Driven Inflation Contributions</h2>
-                    <div class="precision-filters" id="mainPrecisionFilters">
-                        <h4>Precision Filter</h4>
-                        <label><input type="radio" name="mainPrecisionFilter" value="all" checked> All precision levels</label>
-                        <label><input type="radio" name="mainPrecisionFilter" value="high_and_above"> High & Very High only</label>
-                        <label><input type="radio" name="mainPrecisionFilter" value="very_high"> Very High only</label>
+                    <div class="chart-header">
+                        <h2 id="chartTitle">Supply and Demand Driven Inflation Contributions</h2>
+                        <div class="precision-filters" id="mainPrecisionFilters">
+                            <h4>Precision Filter</h4>
+                            <label><input type="radio" name="mainPrecisionFilter" value="all" checked> All precision levels</label>
+                            <label><input type="radio" name="mainPrecisionFilter" value="high_and_above"> High & Very High only</label>
+                            <label><input type="radio" name="mainPrecisionFilter" value="very_high"> Very High only</label>
+                        </div>
                     </div>
                     <div class="chart-wrapper">
                         <canvas id="mainChart"></canvas>
@@ -592,12 +611,14 @@
                 </div>
 
                 <div class="chart-container">
-                    <h2>Last 24 Months</h2>
-                    <div class="precision-filters" id="recentPrecisionFilters">
-                        <h4>Precision Filter</h4>
-                        <label><input type="radio" name="recentPrecisionFilter" value="all" checked> All precision levels</label>
-                        <label><input type="radio" name="recentPrecisionFilter" value="high_and_above"> High & Very High only</label>
-                        <label><input type="radio" name="recentPrecisionFilter" value="very_high"> Very High only</label>
+                    <div class="chart-header">
+                        <h2>Last 24 Months</h2>
+                        <div class="precision-filters" id="recentPrecisionFilters">
+                            <h4>Precision Filter</h4>
+                            <label><input type="radio" name="recentPrecisionFilter" value="all" checked> All precision levels</label>
+                            <label><input type="radio" name="recentPrecisionFilter" value="high_and_above"> High & Very High only</label>
+                            <label><input type="radio" name="recentPrecisionFilter" value="very_high"> Very High only</label>
+                        </div>
                     </div>
                     <div class="chart-wrapper" style="height: 300px;">
                         <canvas id="recentChart"></canvas>
