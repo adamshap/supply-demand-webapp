@@ -146,17 +146,11 @@
             padding: 25px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: relative;
-        }
-
-        .chart-header {
-            position: relative;
-            margin-bottom: 20px;
         }
 
         .chart-container h2 {
             font-size: 1.4em;
-            margin-bottom: 0;
+            margin-bottom: 20px;
             color: #4A7BA7;
             font-weight: 600;
         }
@@ -164,49 +158,6 @@
         .chart-wrapper {
             position: relative;
             height: 500px;
-        }
-
-        .precision-filters {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: white;
-            border: 2px solid #4A7BA7;
-            border-radius: 6px;
-            padding: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            z-index: 10;
-            display: none;
-            min-width: 240px;
-        }
-
-        .precision-filters.visible {
-            display: block;
-        }
-
-        .precision-filters h4 {
-            margin: 0 0 10px 0;
-            font-size: 0.9em;
-            color: #4A7BA7;
-            font-weight: 600;
-        }
-
-        .precision-filters label {
-            display: flex;
-            align-items: center;
-            font-size: 0.85em;
-            margin-bottom: 8px;
-            cursor: pointer;
-            color: #333;
-        }
-
-        .precision-filters label:last-child {
-            margin-bottom: 0;
-        }
-
-        .precision-filters input[type="radio"] {
-            margin-right: 8px;
-            cursor: pointer;
         }
 
         .download-btn {
@@ -475,32 +426,6 @@
                 padding: 12px;
                 font-size: 16px;
             }
-
-            .precision-filters {
-                position: relative;
-                top: auto;
-                right: auto;
-                margin-bottom: 15px;
-                padding: 12px;
-                max-width: 100%;
-            }
-
-            .precision-filters h4 {
-                font-size: 0.9em;
-                margin-bottom: 12px;
-            }
-
-            .precision-filters label {
-                font-size: 0.9em;
-                padding: 8px 0;
-                margin-bottom: 10px;
-            }
-
-            .precision-filters input[type="radio"] {
-                width: 20px;
-                height: 20px;
-                margin-right: 12px;
-            }
         }
 
         /* Extra small phones */
@@ -596,30 +521,14 @@
 
             <main class="charts">
                 <div class="chart-container">
-                    <div class="chart-header">
-                        <h2 id="chartTitle">Supply and Demand Driven Inflation Contributions</h2>
-                        <div class="precision-filters" id="mainPrecisionFilters">
-                            <h4>Precision Filter</h4>
-                            <label><input type="radio" name="mainPrecisionFilter" value="all" checked> All precision levels</label>
-                            <label><input type="radio" name="mainPrecisionFilter" value="high_and_above"> High & Very High only</label>
-                            <label><input type="radio" name="mainPrecisionFilter" value="very_high"> Very High only</label>
-                        </div>
-                    </div>
+                    <h2 id="chartTitle">Supply and Demand Driven Inflation Contributions</h2>
                     <div class="chart-wrapper">
                         <canvas id="mainChart"></canvas>
                     </div>
                 </div>
 
                 <div class="chart-container">
-                    <div class="chart-header">
-                        <h2>Last 24 Months</h2>
-                        <div class="precision-filters" id="recentPrecisionFilters">
-                            <h4>Precision Filter</h4>
-                            <label><input type="radio" name="recentPrecisionFilter" value="all" checked> All precision levels</label>
-                            <label><input type="radio" name="recentPrecisionFilter" value="high_and_above"> High & Very High only</label>
-                            <label><input type="radio" name="recentPrecisionFilter" value="very_high"> Very High only</label>
-                        </div>
-                    </div>
+                    <h2>Last 24 Months</h2>
                     <div class="chart-wrapper" style="height: 300px;">
                         <canvas id="recentChart"></canvas>
                     </div>
@@ -717,12 +626,12 @@
         const now = new Date();
         const cacheBuster = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}`;
         Promise.all([
-            fetch(`public/supply_demand_baseline.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`public/supply_demand_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`public/supply_demand_quarterly.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`public/supply_demand_goods_services.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`public/supply_demand_goods_services_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`public/supply_demand_precision.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV)
+            fetch(`supply_demand_baseline.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_quarterly.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_goods_services.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_goods_services_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_precision.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV)
         ]).then(([baseline, ambiguous, quarterly, goodsServices, goodsServicesAmb, precision]) => {
             allData = {
                 'Baseline': baseline,
@@ -735,9 +644,8 @@
             updateCharts();
         }).catch(error => console.error('Error loading data:', error));
 
-        // Initialize quarterly availability and precision filters on load
+        // Initialize quarterly availability on load
         updateQuarterlyAvailability();
-        updatePrecisionFiltersVisibility();
 
         // Event listeners
         document.querySelectorAll('input[name="series"]').forEach(input => {
@@ -752,20 +660,11 @@
 
         document.getElementById('breakdown').addEventListener('change', function() {
             updateQuarterlyAvailability();
-            updatePrecisionFiltersVisibility();
             updateCharts();
         });
         document.getElementById('showAmbiguous').addEventListener('change', updateCharts);
         document.getElementById('startDateSlider').addEventListener('input', updateCharts);
         document.getElementById('endDateSlider').addEventListener('input', updateCharts);
-
-        // Precision filter listeners
-        document.querySelectorAll('input[name="mainPrecisionFilter"]').forEach(input => {
-            input.addEventListener('change', updateCharts);
-        });
-        document.querySelectorAll('input[name="recentPrecisionFilter"]').forEach(input => {
-            input.addEventListener('change', updateCharts);
-        });
 
         function updateQuarterlyAvailability() {
             const breakdown = document.getElementById('breakdown').value;
@@ -797,20 +696,6 @@
             }
         }
 
-        function updatePrecisionFiltersVisibility() {
-            const breakdown = document.getElementById('breakdown').value;
-            const mainFilters = document.getElementById('mainPrecisionFilters');
-            const recentFilters = document.getElementById('recentPrecisionFilters');
-
-            if (breakdown === 'precision') {
-                mainFilters.classList.add('visible');
-                recentFilters.classList.add('visible');
-            } else {
-                mainFilters.classList.remove('visible');
-                recentFilters.classList.remove('visible');
-            }
-        }
-
         function updateCharts() {
             const series = document.querySelector('input[name="series"]:checked').value;
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
@@ -819,10 +704,7 @@
 
             console.log('UpdateCharts called - Series:', series, 'Freq:', frequency, 'Breakdown:', breakdown, 'ShowAmb:', showAmbiguous);
 
-            // Get precision filter value (needed for initial config)
-            const mainPrecisionFilterInitial = document.querySelector('input[name="mainPrecisionFilter"]:checked')?.value || 'all';
-
-            const config = getChartConfig(series, frequency, breakdown, showAmbiguous, mainPrecisionFilterInitial);
+            const config = getChartConfig(series, frequency, breakdown, showAmbiguous);
             console.log('Config datasets:', config.datasets.map(d => d.label));
             console.log('First data point:', config.data[0]);
 
@@ -872,13 +754,9 @@
             if (mainChart) mainChart.destroy();
             if (recentChart) recentChart.destroy();
 
-            // Get precision filter values
-            const mainPrecisionFilter = document.querySelector('input[name="mainPrecisionFilter"]:checked')?.value || 'all';
-            const recentPrecisionFilter = document.querySelector('input[name="recentPrecisionFilter"]:checked')?.value || 'all';
-
             // Create configs with filtered data
-            const mainConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, filteredData, mainPrecisionFilter);
-            const recentConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, recentData, recentPrecisionFilter);
+            const mainConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, filteredData);
+            const recentConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, recentData);
 
             mainChart = createChart('mainChart', filteredData, mainConfig);
             recentChart = createChart('recentChart', recentData, recentConfig);
@@ -886,7 +764,7 @@
             document.getElementById('chartTitle').textContent = config.title;
         }
 
-        function getChartConfigWithData(series, frequency, breakdown, showAmbiguous, data, precisionFilter = 'all') {
+        function getChartConfigWithData(series, frequency, breakdown, showAmbiguous, data) {
             const s = series === 'headline' ? 'hdln' : 'core';
             const f = frequency === 'monthly' ? 'mom' : frequency === 'yearly' ? 'yoy' : 'qoq';
             const freqLabel = frequency === 'monthly' ? 'm/m' : frequency === 'yearly' ? 'y/y' : 'q/q';
@@ -920,35 +798,15 @@
                 datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'precision') {
                 // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
-                // Apply precision filter
-                if (precisionFilter === 'very_high') {
-                    // Only very high precision
-                    datasets = [
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
-                    ];
-                } else if (precisionFilter === 'high_and_above') {
-                    // High and very high precision
-                    datasets = [
-                        { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
-                    ];
-                } else {
-                    // All precision levels (default)
-                    datasets = [
-                        { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
-                        { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (low precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
-                        { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
-                    ];
-                }
+                datasets = [
+                    { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
+                    { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
+                    { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                    { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
+                    { label: 'Supply (low precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
+                    { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
+                    { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
+                ];
             } else {
                 // Baseline - Order: Demand (bottom), Ambiguous (middle), Supply (top)
                 // All data now in percentage points (no multiplier needed)
@@ -996,7 +854,7 @@
             };
         }
 
-        function getChartConfig(series, frequency, breakdown, showAmbiguous, precisionFilter = 'all') {
+        function getChartConfig(series, frequency, breakdown, showAmbiguous) {
             const s = series === 'headline' ? 'hdln' : 'core';
             const f = frequency === 'monthly' ? 'mom' : frequency === 'yearly' ? 'yoy' : 'qoq';
             const freqLabel = frequency === 'monthly' ? 'm/m' : frequency === 'yearly' ? 'y/y' : 'q/q';
@@ -1057,35 +915,15 @@
                 datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
             } else if (breakdown === 'precision') {
                 // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
-                // Apply precision filter
-                if (precisionFilter === 'very_high') {
-                    // Only very high precision
-                    datasets = [
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
-                    ];
-                } else if (precisionFilter === 'high_and_above') {
-                    // High and very high precision
-                    datasets = [
-                        { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
-                    ];
-                } else {
-                    // All precision levels (default)
-                    datasets = [
-                        { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
-                        { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (low precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
-                        { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
-                    ];
-                }
+                datasets = [
+                    { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
+                    { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
+                    { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                    { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
+                    { label: 'Supply (low precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
+                    { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
+                    { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
+                ];
             } else {
                 // Baseline - Order: Demand (bottom), Ambiguous (middle), Supply (top)
                 // All data now in percentage points (no multiplier needed)
