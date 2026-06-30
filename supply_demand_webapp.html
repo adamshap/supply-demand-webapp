@@ -760,8 +760,14 @@
             updateCharts();
         });
         document.getElementById('showAmbiguous').addEventListener('change', updateCharts);
-        document.getElementById('startDateSlider').addEventListener('input', updateCharts);
-        document.getElementById('endDateSlider').addEventListener('input', updateCharts);
+
+        let sliderDebounceTimer = null;
+        function debouncedUpdateCharts() {
+            clearTimeout(sliderDebounceTimer);
+            sliderDebounceTimer = setTimeout(updateCharts, 50);
+        }
+        document.getElementById('startDateSlider').addEventListener('input', debouncedUpdateCharts);
+        document.getElementById('endDateSlider').addEventListener('input', debouncedUpdateCharts);
 
         // Precision filter listeners
         document.querySelectorAll('input[name="mainPrecisionFilter"]').forEach(input => {
@@ -821,73 +827,40 @@
             const breakdown = document.getElementById('breakdown').value;
             const showAmbiguous = document.getElementById('showAmbiguous').checked;
 
-            console.log('UpdateCharts called - Series:', series, 'Freq:', frequency, 'Breakdown:', breakdown, 'ShowAmb:', showAmbiguous);
+            const fullData = getSheetData(frequency, breakdown, showAmbiguous);
 
-            // Get precision filter value (needed for initial config)
-            const mainPrecisionFilterInitial = document.querySelector('input[name="mainPrecisionFilter"]:checked')?.value || 'all';
-
-            const config = getChartConfig(series, frequency, breakdown, showAmbiguous, mainPrecisionFilterInitial);
-            console.log('Config datasets:', config.datasets.map(d => d.label));
-            console.log('First data point:', config.data[0]);
-
-            // For core monthly baseline, check a specific data point
-            if (series === 'core' && frequency === 'monthly' && breakdown === 'baseline') {
-                const testPoint = config.data[100];
-                console.log('Test point (row 100):', testPoint);
-                console.log('amb_core_mom value:', testPoint?.amb_core_mom);
-                console.log('Dataset ambiguous values sample:', config.datasets.find(d => d.label === 'Ambiguous')?.data.slice(100, 105));
-            }
-
-            // Debug: check first data point for baseline
-            if (breakdown === 'baseline' && config.data.length > 100) {
-                const testPoint = config.data[100];
-                console.log('Sample data point:', testPoint);
-                console.log('Datasets being used:', config.datasets.map(d => d.label));
-            }
-
-            // Get slider positions and convert to dates
             const startSlider = parseInt(document.getElementById('startDateSlider').value);
             const endSlider = parseInt(document.getElementById('endDateSlider').value);
 
-            const totalMonths = config.data.length;
+            const totalMonths = fullData.length;
             const startIdx = Math.floor((startSlider / 100) * totalMonths);
             const endIdx = Math.min(Math.floor((endSlider / 100) * totalMonths), totalMonths - 1);
 
-            console.log('Slider values:', startSlider, endSlider);
-            console.log('Array indices:', startIdx, endIdx, 'out of', totalMonths);
+            const startDate = fullData[startIdx]?.date || fullData[0]?.date;
+            const endDate = fullData[endIdx]?.date || fullData[fullData.length - 1]?.date;
 
-            const startDate = config.data[startIdx]?.date || config.data[0]?.date;
-            const endDate = config.data[endIdx]?.date || config.data[config.data.length - 1]?.date;
-
-            console.log('Dates:', startDate, 'to', endDate);
-
-            // Update labels
             document.getElementById('startDateLabel').textContent = startDate ? startDate.substring(0, 7) : '';
             document.getElementById('endDateLabel').textContent = endDate ? endDate.substring(0, 7) : '';
 
-            // Use slice instead of filter for better performance
-            const filteredData = config.data.slice(startIdx, endIdx + 1);
-            console.log('Filtered data length:', filteredData.length);
+            const filteredData = fullData.slice(startIdx, endIdx + 1);
 
             // For quarterly data, show last 8 quarters (2 years), for monthly show last 24 months
             const recentCount = frequency === 'quarterly' ? 8 : 24;
-            const recentData = config.data.slice(-recentCount);
+            const recentData = fullData.slice(-recentCount);
 
             if (mainChart) mainChart.destroy();
             if (recentChart) recentChart.destroy();
 
-            // Get precision filter values
             const mainPrecisionFilter = document.querySelector('input[name="mainPrecisionFilter"]:checked')?.value || 'all';
             const recentPrecisionFilter = document.querySelector('input[name="recentPrecisionFilter"]:checked')?.value || 'all';
 
-            // Create configs with filtered data
             const mainConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, filteredData, mainPrecisionFilter);
             const recentConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, recentData, recentPrecisionFilter);
 
             mainChart = createChart('mainChart', filteredData, mainConfig);
             recentChart = createChart('recentChart', recentData, recentConfig);
 
-            document.getElementById('chartTitle').textContent = config.title;
+            document.getElementById('chartTitle').textContent = mainConfig.title;
         }
 
         function getChartConfigWithData(series, frequency, breakdown, showAmbiguous, data, precisionFilter = 'all') {
@@ -1026,178 +999,22 @@
             };
         }
 
-        function getChartConfig(series, frequency, breakdown, showAmbiguous, precisionFilter = 'all') {
-            const s = series === 'headline' ? 'hdln' : 'core';
-            const f = frequency === 'monthly' ? 'mom' : frequency === 'yearly' ? 'yoy' : 'qoq';
-            const freqLabel = frequency === 'monthly' ? 'm/m' : frequency === 'yearly' ? 'y/y' : 'q/q';
-
-            let sheetName, dateKey = 'date', datasets;
-
-            // Determine which sheet to use based on whether ambiguous is shown
+        function getSheetData(frequency, breakdown, showAmbiguous) {
+            let sheetName;
             if (frequency === 'quarterly') {
                 sheetName = 'Quarterly';
-            } else if (breakdown === 'baseline') {
-                // For baseline: use Ambiguous sheet if showing ambiguous, otherwise Baseline sheet
-                sheetName = showAmbiguous ? 'Ambiguous' : 'Baseline';
             } else if (breakdown === 'precision') {
                 sheetName = 'Precision';
             } else if (breakdown === 'goods' || breakdown === 'services' || breakdown === 'housing') {
-                // For goods/services/housing: use ambiguous sheet if showing ambiguous, otherwise regular
                 sheetName = showAmbiguous ? 'Goods_Services_Ambiguous' : 'Goods_Services';
             } else {
                 sheetName = showAmbiguous ? 'Ambiguous' : 'Baseline';
             }
-
-            const data = allData[sheetName] || [];
-
-            // Debug: Check if we're loading the right data
-            if (series === 'core' && breakdown === 'baseline' && frequency === 'monthly' && showAmbiguous) {
-                console.log('=== CORE MONTHLY BASELINE DEBUG ===');
-                console.log('Sheet name:', sheetName);
-                console.log('Data length:', data.length);
-                console.log('First row columns:', Object.keys(data[0] || {}));
-                console.log('First row amb_core_mom:', data[0]?.amb_core_mom);
-                console.log('Row 100 amb_core_mom:', data[100]?.amb_core_mom);
-            }
-
-            // Build datasets based on breakdown type
-            if (breakdown === 'goods') {
-                datasets = [
-                    { label: 'Demand (goods)', data: data.map(d => ({ x: d.date, y: d[`dem_goods_${s}_${f}`] })), backgroundColor: colors.demand }
-                ];
-                if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (goods)', data: data.map(d => ({ x: d.date, y: d[`amb_goods_${s}_${f}`] })), backgroundColor: colors.ambiguous });
-                }
-                datasets.push({ label: 'Supply (goods)', data: data.map(d => ({ x: d.date, y: d[`sup_goods_${s}_${f}`] })), backgroundColor: colors.supply });
-            } else if (breakdown === 'services') {
-                datasets = [
-                    { label: 'Demand (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`dem_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.demand }
-                ];
-                if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`amb_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
-                }
-                datasets.push({ label: 'Supply (services ex housing)', data: data.map(d => ({ x: d.date, y: d[`sup_serv_ex_hous_${s}_${f}`] })), backgroundColor: colors.supply });
-            } else if (breakdown === 'housing') {
-                datasets = [
-                    { label: 'Demand (housing)', data: data.map(d => ({ x: d.date, y: d[`dem_hous_${s}_${f}`] })), backgroundColor: colors.demand }
-                ];
-                if (showAmbiguous) {
-                    datasets.push({ label: 'Ambiguous (housing)', data: data.map(d => ({ x: d.date, y: d[`amb_hous_${s}_${f}`] })), backgroundColor: colors.ambiguous });
-                }
-                datasets.push({ label: 'Supply (housing)', data: data.map(d => ({ x: d.date, y: d[`sup_hous_${s}_${f}`] })), backgroundColor: colors.supply });
-            } else if (breakdown === 'precision') {
-                // Order: Low precision closest to 0, then high, then very high, ambiguous in middle
-                // Apply precision filter - lower precision categories get absorbed into ambiguous
-                if (precisionFilter === 'very_high') {
-                    // Very high precision: combine ambiguous + low precision + high precision into expanded ambiguous
-                    datasets = [
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({
-                            x: d.date,
-                            y: (d[`amb_${s}_${f}`] || 0) + (d[`dem_L_${s}_${f}`] || 0) + (d[`dem_H_${s}_${f}`] || 0) + (d[`sup_L_${s}_${f}`] || 0) + (d[`sup_H_${s}_${f}`] || 0)
-                        })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
-                    ];
-                } else if (precisionFilter === 'high_and_above') {
-                    // High precision decomposition: merge high + very high precision, expand ambiguous with low precision
-                    datasets = [
-                        { label: 'Demand (high to very high precision)', data: data.map(d => ({
-                            x: d.date,
-                            y: (d[`dem_H_${s}_${f}`] || 0) + (d[`dem_HH_${s}_${f}`] || 0)
-                        })), backgroundColor: colors.demandH },
-                        { label: 'Ambiguous', data: data.map(d => ({
-                            x: d.date,
-                            y: (d[`amb_${s}_${f}`] || 0) + (d[`dem_L_${s}_${f}`] || 0) + (d[`sup_L_${s}_${f}`] || 0)
-                        })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (high to very high precision)', data: data.map(d => ({
-                            x: d.date,
-                            y: (d[`sup_H_${s}_${f}`] || 0) + (d[`sup_HH_${s}_${f}`] || 0)
-                        })), backgroundColor: colors.supplyH }
-                    ];
-                } else {
-                    // All precision levels (default) - includes ambiguous as lowest precision
-                    datasets = [
-                        { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
-                        { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
-                        { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (low precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
-                        { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
-                    ];
-                }
-            } else {
-                // Baseline - Order: Demand (bottom), Ambiguous (middle), Supply (top)
-                // All data now in percentage points (no multiplier needed)
-
-                // Build datasets: always include demand and supply
-                datasets = [
-                    {
-                        label: 'Demand-driven',
-                        data: data.map(d => ({
-                            x: d.date,
-                            y: parseFloat(d[`dem_${s}_${f}`]) || 0
-                        })),
-                        backgroundColor: colors.demand
-                    }
-                ];
-
-                // Add ambiguous in the middle (only when showAmbiguous is true and using Ambiguous sheet)
-                if (showAmbiguous) {
-                    datasets.push({
-                        label: 'Ambiguous',
-                        data: data.map(d => ({
-                            x: d.date,
-                            y: parseFloat(d[`amb_${s}_${f}`]) || 0
-                        })),
-                        backgroundColor: colors.ambiguous
-                    });
-                }
-
-                // Always add supply on top
-                datasets.push({
-                    label: 'Supply-driven',
-                    data: data.map(d => ({
-                        x: d.date,
-                        y: parseFloat(d[`sup_${s}_${f}`]) || 0
-                    })),
-                    backgroundColor: colors.supply
-                });
-            }
-
-            // Generate title based on breakdown
-            let title;
-            const seriesLabel = series === 'headline' ? 'Headline' : 'Core';
-
-            if (breakdown === 'goods') {
-                title = `Contribution of Goods to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
-            } else if (breakdown === 'services') {
-                title = `Contribution of Services (ex. Housing) to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
-            } else if (breakdown === 'housing') {
-                title = `Contribution of Housing to ${seriesLabel} Supply and Demand Driven (${freqLabel})`;
-            } else if (breakdown === 'precision') {
-                title = `Supply and Demand Driven ${seriesLabel} PCE Inflation by Precision Level (${freqLabel})`;
-            } else {
-                title = `Supply and Demand Driven ${seriesLabel} PCE Inflation (${freqLabel})`;
-            }
-
-            return {
-                data,
-                dateKey,
-                datasets,
-                title
-            };
+            return allData[sheetName] || [];
         }
 
         function createChart(canvasId, data, config) {
             const ctx = document.getElementById(canvasId).getContext('2d');
-
-            // Debug: Log what datasets we're creating
-            console.log('Creating chart with datasets:', config.datasets.map(d => ({
-                label: d.label,
-                dataLength: d.data.length,
-                sampleValues: d.data.slice(0, 3).map(pt => pt.y)
-            })));
 
             // Add border and ensure full opacity for each dataset
             config.datasets.forEach(dataset => {
@@ -1285,21 +1102,6 @@
             });
         }
 
-        function filterDataByDate(data, dateKey, startDate, endDate) {
-            if (!startDate && !endDate) return data;
-
-            return data.filter(d => {
-                const date = d[dateKey];
-                if (startDate && date < startDate) return false;
-                if (endDate && date > endDate + '-28') return false;
-                return true;
-            });
-        }
-
-        function getRecentMonths(data, dateKey, months) {
-            return data.slice(-months);
-        }
-
         function downloadFullDataset() {
             // Download the full Excel file from GitHub
             const url = 'supply_demand_public.xlsx';
@@ -1315,17 +1117,16 @@
             const breakdown = document.getElementById('breakdown').value;
             const showAmbiguous = document.getElementById('showAmbiguous').checked;
 
-            const config = getChartConfig(series, frequency, breakdown, showAmbiguous);
+            const fullData = getSheetData(frequency, breakdown, showAmbiguous);
 
-            // Get slider positions
             const startSlider = parseInt(document.getElementById('startDateSlider').value);
             const endSlider = parseInt(document.getElementById('endDateSlider').value);
 
-            const totalMonths = config.data.length;
+            const totalMonths = fullData.length;
             const startIdx = Math.floor((startSlider / 100) * totalMonths);
             const endIdx = Math.min(Math.floor((endSlider / 100) * totalMonths), totalMonths - 1);
 
-            const filteredData = config.data.slice(startIdx, endIdx + 1);
+            const filteredData = fullData.slice(startIdx, endIdx + 1);
 
             if (!filteredData || filteredData.length === 0) {
                 alert('No data available to download');
