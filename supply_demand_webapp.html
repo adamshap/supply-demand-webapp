@@ -221,6 +221,36 @@
             transition: background-color 0.2s;
         }
 
+        .preset-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .preset-chips button {
+            flex: 1;
+            min-width: 0;
+            padding: 8px 4px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #4A7BA7;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+
+        .preset-chips button:hover {
+            background: #4A7BA7;
+            color: white;
+            border-color: #4A7BA7;
+        }
+
+        .preset-chips button:active {
+            background: #005A93;
+        }
+
         .download-btn:hover {
             background-color: #005A93;
         }
@@ -249,6 +279,10 @@
 
         /* Mobile toggle button - only visible on mobile */
         .mobile-toggle {
+            display: none;
+        }
+
+        .toggle-recent-btn {
             display: none;
         }
 
@@ -461,6 +495,33 @@
                 margin-top: 12px;
             }
 
+            .preset-chips button {
+                padding: 12px 4px;
+                font-size: 0.95em;
+            }
+
+            #recentChartContainer {
+                display: none;
+            }
+
+            #recentChartContainer.mobile-visible {
+                display: block;
+            }
+
+            .toggle-recent-btn {
+                display: block;
+                width: 100%;
+                padding: 12px;
+                background: white;
+                color: #4A7BA7;
+                border: 2px solid #4A7BA7;
+                border-radius: 6px;
+                font-size: 0.95em;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 15px;
+            }
+
             .info-box {
                 font-size: 0.9em;
                 padding: 12px;
@@ -580,12 +641,17 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Start Date: <span id="startDateLabel">2019-01</span></label>
+                    <label>Date Range:</label>
+                    <div class="preset-chips" style="margin-bottom: 10px;">
+                        <button type="button" onclick="setDateRange(1)">1Y</button>
+                        <button type="button" onclick="setDateRange(3)">3Y</button>
+                        <button type="button" onclick="setDateRange(5)">5Y</button>
+                        <button type="button" onclick="setDateRange(10)">10Y</button>
+                        <button type="button" onclick="setDateRange('all')">All</button>
+                    </div>
+                    <label style="font-size: 0.85em; font-weight: normal; color: #666;">Start: <span id="startDateLabel">2019-01</span></label>
                     <input type="range" id="startDateSlider" min="0" max="100" value="85" style="width: 100%;">
-                </div>
-
-                <div class="control-group">
-                    <label>End Date: <span id="endDateLabel">2026-04</span></label>
+                    <label style="font-size: 0.85em; font-weight: normal; color: #666;">End: <span id="endDateLabel">2026-04</span></label>
                     <input type="range" id="endDateSlider" min="0" max="100" value="100" style="width: 100%;">
                 </div>
 
@@ -612,7 +678,9 @@
                     </div>
                 </div>
 
-                <div class="chart-container">
+                <button type="button" class="toggle-recent-btn" id="toggleRecentBtn" onclick="toggleRecentChart()">Show Recent Detail (Last 24 Months) ▼</button>
+
+                <div class="chart-container" id="recentChartContainer">
                     <div class="chart-header">
                         <h2>Last 24 Months</h2>
                         <div class="precision-filters" id="recentPrecisionFilters">
@@ -638,6 +706,42 @@
     </footer>
 
     <script>
+        function setDateRange(years) {
+            const frequency = document.querySelector('input[name="frequency"]:checked').value;
+            const breakdown = document.getElementById('breakdown').value;
+            const showAmbiguous = document.getElementById('showAmbiguous').checked;
+            const data = getSheetData(frequency, breakdown, showAmbiguous);
+            if (!data.length) return;
+
+            const total = data.length;
+            const endSlider = 100;
+            let startSlider;
+            if (years === 'all') {
+                startSlider = 0;
+            } else {
+                const periodsPerYear = frequency === 'quarterly' ? 4 : 12;
+                const periods = years * periodsPerYear;
+                const startIdx = Math.max(0, total - periods);
+                startSlider = Math.round((startIdx / total) * 100);
+            }
+            document.getElementById('startDateSlider').value = startSlider;
+            document.getElementById('endDateSlider').value = endSlider;
+            updateCharts();
+        }
+
+        function toggleRecentChart() {
+            const container = document.getElementById('recentChartContainer');
+            const btn = document.getElementById('toggleRecentBtn');
+            if (container.classList.contains('mobile-visible')) {
+                container.classList.remove('mobile-visible');
+                btn.innerHTML = 'Show Recent Detail (Last 24 Months) &#9660;';
+            } else {
+                container.classList.add('mobile-visible');
+                btn.innerHTML = 'Hide Recent Detail &#9650;';
+                updateCharts();
+            }
+        }
+
         // Mobile controls toggle
         function toggleControls() {
             const panel = document.getElementById('controlsPanel');
@@ -855,10 +959,16 @@
             const recentPrecisionFilter = document.querySelector('input[name="recentPrecisionFilter"]:checked')?.value || 'all';
 
             const mainConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, filteredData, mainPrecisionFilter);
-            const recentConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, recentData, recentPrecisionFilter);
-
             mainChart = createChart('mainChart', filteredData, mainConfig);
-            recentChart = createChart('recentChart', recentData, recentConfig);
+
+            const recentContainer = document.getElementById('recentChartContainer');
+            const recentVisible = window.getComputedStyle(recentContainer).display !== 'none';
+            if (recentVisible) {
+                const recentConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, recentData, recentPrecisionFilter);
+                recentChart = createChart('recentChart', recentData, recentConfig);
+            } else {
+                recentChart = null;
+            }
 
             document.getElementById('chartTitle').textContent = mainConfig.title;
         }
