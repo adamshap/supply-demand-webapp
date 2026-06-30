@@ -500,6 +500,10 @@
                 font-size: 0.95em;
             }
 
+            .share-chart-btn {
+                display: block !important;
+            }
+
             #recentChartContainer {
                 display: none;
             }
@@ -655,6 +659,7 @@
                     <input type="range" id="endDateSlider" min="0" max="100" value="100" style="width: 100%;">
                 </div>
 
+                <button class="download-btn share-chart-btn" id="shareChartBtn" onclick="shareChart()" style="display: none; margin-top: 0;">Share Chart</button>
                 <button class="download-btn" onclick="downloadFullDataset()">Download Full Dataset (Excel)</button>
                 <button class="download-btn" onclick="downloadViewCSV()" style="margin-top: 10px;">Download Current View (CSV)</button>
                 </div>
@@ -706,6 +711,68 @@
     </footer>
 
     <script>
+        async function shareChart() {
+            if (!mainChart) return;
+
+            const sourceCanvas = document.getElementById('mainChart');
+            const title = document.getElementById('chartTitle').textContent;
+
+            const startDate = document.getElementById('startDateLabel').textContent;
+            const endDate = document.getElementById('endDateLabel').textContent;
+
+            // Build composite canvas: title + chart + footer
+            const titleHeight = 50;
+            const footerHeight = 50;
+            const w = sourceCanvas.width;
+            const h = sourceCanvas.height + titleHeight + footerHeight;
+
+            const out = document.createElement('canvas');
+            out.width = w;
+            out.height = h;
+            const ctx = out.getContext('2d');
+
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = '#4A7BA7';
+            ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, w / 2, 32);
+
+            ctx.drawImage(sourceCanvas, 0, titleHeight);
+
+            ctx.fillStyle = '#666';
+            ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText(`Shapiro (2026), JMCB  •  Federal Reserve Bank of San Francisco  •  Data through ${endDate}`, w / 2, titleHeight + sourceCanvas.height + 30);
+
+            const blob = await new Promise(resolve => out.toBlob(resolve, 'image/png'));
+            const filename = `supply_demand_${startDate}_to_${endDate}.png`;
+            const file = new File([blob], filename, { type: 'image/png' });
+
+            const shareData = {
+                files: [file],
+                title: 'Supply and Demand Driven PCE Inflation',
+                text: `${title} — Shapiro (2026), JMCB`
+            };
+
+            if (navigator.canShare && navigator.canShare(shareData)) {
+                try {
+                    await navigator.share(shareData);
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                }
+            }
+
+            // Fallback: download
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
         function setDateRange(years) {
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
             const breakdown = document.getElementById('breakdown').value;
