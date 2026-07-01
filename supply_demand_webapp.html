@@ -898,9 +898,10 @@
                 const periodsPerYear = frequency === 'quarterly' ? 4 : 12;
                 const periods = years * periodsPerYear;
                 const startIdx = Math.max(0, total - periods);
-                // Pick a slider value whose floor(v/MAX * total) exactly recovers startIdx.
-                // Use +0.5 in the numerator so we land in the middle of the target step.
-                startSlider = Math.min(SLIDER_MAX, Math.floor(((startIdx + 0.5) / total) * SLIDER_MAX));
+                // Smallest slider value s such that floor(s/SLIDER_MAX * total) === startIdx.
+                // ceil guarantees the reverse computation lands on the intended index rather
+                // than the one before it.
+                startSlider = Math.min(SLIDER_MAX, Math.ceil((startIdx * SLIDER_MAX) / total));
             }
             document.getElementById('startDateSlider').value = startSlider;
             document.getElementById('endDateSlider').value = endSlider;
