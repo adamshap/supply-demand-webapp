@@ -268,7 +268,7 @@
             cursor: pointer;
             font-size: 0.85em;
             font-weight: 600;
-            transition: all 0.15s;
+            transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
         }
 
         .preset-chips button:hover {
@@ -279,6 +279,13 @@
 
         .preset-chips button:active {
             background: #005A93;
+            transform: scale(0.94);
+        }
+
+        .preset-chips button.just-clicked {
+            background: #4A7BA7;
+            color: white;
+            border-color: #4A7BA7;
         }
 
         .download-btn:hover {
@@ -842,6 +849,18 @@
             }
             document.getElementById('startDateSlider').value = startSlider;
             document.getElementById('endDateSlider').value = endSlider;
+
+            // Flash the matching chip(s) — both sidebar and mobile row share the same onclick,
+            // so we identify them by attribute value.
+            const key = years === 'all' ? "'all'" : String(years);
+            document.querySelectorAll('.preset-chips button').forEach(btn => {
+                const onclick = btn.getAttribute('onclick') || '';
+                if (onclick === `setDateRange(${key})`) {
+                    btn.classList.add('just-clicked');
+                    setTimeout(() => btn.classList.remove('just-clicked'), 400);
+                }
+            });
+
             updateCharts();
         }
 
