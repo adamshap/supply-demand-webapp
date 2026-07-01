@@ -312,10 +312,6 @@
             display: none;
         }
 
-        .toggle-recent-btn {
-            display: none;
-        }
-
         /* Desktop-only elements */
         .desktop-only {
             display: block;
@@ -356,12 +352,11 @@
             }
 
             .controls.collapsed {
-                max-height: 60px;
+                max-height: 78px;
                 overflow: hidden;
             }
 
             .mobile-toggle {
-                display: block;
                 width: 100%;
                 padding: 15px;
                 background: #4A7BA7;
@@ -409,6 +404,10 @@
 
             .chart-wrapper {
                 height: 350px !important;
+            }
+
+            .chart-wrapper.precision-mode {
+                height: 460px !important;
             }
 
             .control-group label {
@@ -537,15 +536,6 @@
                 margin-top: 18px;
             }
 
-            #recentChartContainer,
-            #recentChartContainer.mobile-visible {
-                display: none;
-            }
-
-            .toggle-recent-btn {
-                display: none;
-            }
-
             .date-range-group {
                 display: none;
             }
@@ -606,6 +596,10 @@
                 height: 300px !important;
             }
 
+            .chart-wrapper.precision-mode {
+                height: 420px !important;
+            }
+
             .control-group select,
             .control-group input {
                 font-size: 16px; /* Prevents zoom on iOS */
@@ -618,7 +612,7 @@
         <div class="container">
             <h1>Supply and Demand Driven PCE Inflation</h1>
             <p>Decomposition of inflation into supply-driven, demand-driven, and ambiguous components</p>
-            <div class="citation">Shapiro (2026), <i>Journal of Money, Credit and Banking</i> | <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/jmcb.13209" style="color: #a8d5e2;">Published Article</a> | <a href="https://www.frbsf.org/wp-content/uploads/wp2022-18.pdf" style="color: #a8d5e2;">Working Paper</a></div>
+            <div class="citation">Shapiro (2026), <i>Journal of Money, Credit and Banking</i> | <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/jmcb.13209" style="color: #ffffff;">Published Article</a> | <a href="https://www.frbsf.org/wp-content/uploads/wp2022-18.pdf" style="color: #ffffff;">Working Paper</a></div>
         </div>
     </header>
 
@@ -631,8 +625,6 @@
                 </button>
 
                 <div class="controls-content">
-                    <h3 style="margin-bottom: 20px; color: #4A7BA7; display: none;" class="desktop-only">Chart Options</h3>
-
                     <div class="info-box">
                     <p>Select options below to customize the inflation decomposition view.</p>
                 </div>
@@ -722,24 +714,6 @@
                     </button>
                 </div>
 
-                <button type="button" class="toggle-recent-btn" id="toggleRecentBtn" onclick="toggleRecentChart()">Show Recent Detail (Last 24 Months) ▼</button>
-
-                <div class="chart-container" id="recentChartContainer">
-                    <div class="chart-header">
-                        <h2>Last 24 Months</h2>
-                        <div class="precision-filters" id="recentPrecisionFilters">
-                            <h4>Precision Filter:</h4>
-                            <div class="precision-filters-group">
-                                <label><input type="radio" name="recentPrecisionFilter" value="all" checked> All precision levels</label>
-                                <label><input type="radio" name="recentPrecisionFilter" value="high_and_above"> High precision decomposition</label>
-                                <label><input type="radio" name="recentPrecisionFilter" value="very_high"> Very high precision decomposition</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chart-wrapper" style="height: 300px;">
-                        <canvas id="recentChart"></canvas>
-                    </div>
-                </div>
             </main>
         </div>
     </div>
@@ -759,48 +733,71 @@
             const startDate = document.getElementById('startDateLabel').textContent;
             const endDate = document.getElementById('endDateLabel').textContent;
 
-            // Force legend to bottom for the shared image (may differ from on-screen position)
-            const originalLegendPosition = mainChart.options.plugins.legend.position;
-            if (originalLegendPosition !== 'bottom') {
-                mainChart.options.plugins.legend.position = 'bottom';
-                mainChart.update('none');
-            }
+            // Render the chart into an offscreen Chart.js instance with legend forced to bottom,
+            // so the on-screen chart never flashes.
+            const w = sourceCanvas.width;
+            const h = sourceCanvas.height;
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = w;
+            offCanvas.height = h;
+
+            const offConfig = {
+                type: 'bar',
+                data: { datasets: mainChart.data.datasets.map(ds => ({ ...ds, data: ds.data })) },
+                options: JSON.parse(JSON.stringify(mainChart.options))
+            };
+            // Restore non-serializable callbacks that JSON.parse dropped
+            offConfig.options.plugins = offConfig.options.plugins || {};
+            offConfig.options.plugins.tooltip = mainChart.options.plugins.tooltip;
+            offConfig.options.plugins.legend = offConfig.options.plugins.legend || {};
+            offConfig.options.plugins.legend.position = 'bottom';
+            offConfig.options.animation = false;
+            offConfig.options.responsive = false;
+            offConfig.options.maintainAspectRatio = false;
+
+            const offChart = new Chart(offCanvas.getContext('2d'), offConfig);
+            // Chart.js needs a tick to finish first paint
+            await new Promise(resolve => requestAnimationFrame(resolve));
 
             // Build composite canvas: title + chart + footer
             const titleHeight = 72;
             const footerHeight = 50;
-            const w = sourceCanvas.width;
-            const h = sourceCanvas.height + titleHeight + footerHeight;
+            const outH = h + titleHeight + footerHeight;
 
             const out = document.createElement('canvas');
             out.width = w;
-            out.height = h;
+            out.height = outH;
             const ctx = out.getContext('2d');
 
             ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, w, h);
+            ctx.fillRect(0, 0, w, outH);
 
+            // Fit title: start from an ideal size, shrink until it fits within w - 40px padding
             ctx.fillStyle = '#4A7BA7';
-            const titleFontSize = Math.max(28, Math.round(w / 32));
-            ctx.font = `bold ${titleFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            const maxTextWidth = w - 40;
+            let titleFontSize = Math.max(28, Math.round(w / 32));
+            const setTitleFont = size => {
+                ctx.font = `bold ${size}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            };
+            setTitleFont(titleFontSize);
+            while (titleFontSize > 14 && ctx.measureText(title).width > maxTextWidth) {
+                titleFontSize -= 1;
+                setTitleFont(titleFontSize);
+            }
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(title, w / 2, titleHeight / 2);
             ctx.textBaseline = 'alphabetic';
 
-            ctx.drawImage(sourceCanvas, 0, titleHeight);
+            ctx.drawImage(offCanvas, 0, titleHeight);
 
             ctx.fillStyle = '#666';
             ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            ctx.fillText(`Shapiro (2026), JMCB  •  Federal Reserve Bank of San Francisco  •  Data through ${endDate}`, w / 2, titleHeight + sourceCanvas.height + 30);
+            ctx.fillText(`Shapiro (2026), JMCB  •  Federal Reserve Bank of San Francisco  •  Data through ${endDate}`, w / 2, titleHeight + h + 30);
 
             const blob = await new Promise(resolve => out.toBlob(resolve, 'image/png'));
+            offChart.destroy();
 
-            // Restore original legend position
-            if (originalLegendPosition !== 'bottom') {
-                mainChart.options.plugins.legend.position = originalLegendPosition;
-                mainChart.update('none');
-            }
             const filename = `supply_demand_${startDate}_to_${endDate}.png`;
             const file = new File([blob], filename, { type: 'image/png' });
 
@@ -851,19 +848,6 @@
             updateCharts();
         }
 
-        function toggleRecentChart() {
-            const container = document.getElementById('recentChartContainer');
-            const btn = document.getElementById('toggleRecentBtn');
-            if (container.classList.contains('mobile-visible')) {
-                container.classList.remove('mobile-visible');
-                btn.innerHTML = 'Show Recent Detail (Last 24 Months) &#9660;';
-            } else {
-                container.classList.add('mobile-visible');
-                btn.innerHTML = 'Hide Recent Detail &#9650;';
-                updateCharts();
-            }
-        }
-
         // Mobile controls toggle
         function toggleControls() {
             const panel = document.getElementById('controlsPanel');
@@ -892,7 +876,6 @@
 
         let allData = {};
         let mainChart = null;
-        let recentChart = null;
 
         // Color scheme matching SF Fed
         const colors = {
@@ -922,14 +905,15 @@
                 headers.forEach((header, index) => {
                     const value = values[index];
                     if (header === 'date') {
-                        // Convert Stata date format (1969m1, 1969q1) to proper date
+                        // Convert Stata date format (1969m1, 1969q1) to ISO with noon UTC anchor
+                        // so local-time formatting (tooltip toLocaleDateString) cannot cross the day boundary.
                         if (value.includes('m')) {
                             const [year, month] = value.split('m');
-                            row[header] = `${year}-${month.padStart(2, '0')}-01`;
+                            row[header] = `${year}-${month.padStart(2, '0')}-01T12:00:00Z`;
                         } else if (value.includes('q')) {
                             const [year, quarter] = value.split('q');
                             const month = (parseInt(quarter) - 1) * 3 + 1;
-                            row[header] = `${year}-${month.toString().padStart(2, '0')}-01`;
+                            row[header] = `${year}-${month.toString().padStart(2, '0')}-01T12:00:00Z`;
                         } else {
                             row[header] = value;
                         }
@@ -963,7 +947,15 @@
                 'Precision': precision
             };
             updateCharts();
-        }).catch(error => console.error('Error loading data:', error));
+        }).catch(error => {
+            console.error('Error loading data:', error);
+            document.querySelectorAll('.chart-wrapper').forEach(el => {
+                el.innerHTML = '<div style="padding:20px;text-align:center;color:#666;line-height:1.5;">' +
+                    'Unable to load data. Please check your connection and ' +
+                    '<button onclick="location.reload()" style="text-decoration:underline;background:none;border:none;color:#4A7BA7;cursor:pointer;font:inherit;padding:0;">refresh the page</button>.' +
+                    '</div>';
+            });
+        });
 
         // Initialize quarterly availability and precision filters on load
         updateQuarterlyAvailability();
@@ -990,16 +982,25 @@
         let sliderDebounceTimer = null;
         function debouncedUpdateCharts() {
             clearTimeout(sliderDebounceTimer);
-            sliderDebounceTimer = setTimeout(updateCharts, 50);
+            sliderDebounceTimer = setTimeout(updateCharts, 150);
         }
-        document.getElementById('startDateSlider').addEventListener('input', debouncedUpdateCharts);
-        document.getElementById('endDateSlider').addEventListener('input', debouncedUpdateCharts);
+        const startSliderEl = document.getElementById('startDateSlider');
+        const endSliderEl = document.getElementById('endDateSlider');
+        startSliderEl.addEventListener('input', function() {
+            if (parseInt(startSliderEl.value) > parseInt(endSliderEl.value)) {
+                startSliderEl.value = endSliderEl.value;
+            }
+            debouncedUpdateCharts();
+        });
+        endSliderEl.addEventListener('input', function() {
+            if (parseInt(endSliderEl.value) < parseInt(startSliderEl.value)) {
+                endSliderEl.value = startSliderEl.value;
+            }
+            debouncedUpdateCharts();
+        });
 
         // Precision filter listeners
         document.querySelectorAll('input[name="mainPrecisionFilter"]').forEach(input => {
-            input.addEventListener('change', updateCharts);
-        });
-        document.querySelectorAll('input[name="recentPrecisionFilter"]').forEach(input => {
             input.addEventListener('change', updateCharts);
         });
 
@@ -1036,14 +1037,14 @@
         function updatePrecisionFiltersVisibility() {
             const breakdown = document.getElementById('breakdown').value;
             const mainFilters = document.getElementById('mainPrecisionFilters');
-            const recentFilters = document.getElementById('recentPrecisionFilters');
+            const wrapper = document.querySelector('#mainChart').parentElement;
 
             if (breakdown === 'precision') {
                 mainFilters.classList.add('visible');
-                recentFilters.classList.add('visible');
+                wrapper.classList.add('precision-mode');
             } else {
                 mainFilters.classList.remove('visible');
-                recentFilters.classList.remove('visible');
+                wrapper.classList.remove('precision-mode');
             }
         }
 
@@ -1055,8 +1056,10 @@
 
             const fullData = getSheetData(frequency, breakdown, showAmbiguous);
 
-            const startSlider = parseInt(document.getElementById('startDateSlider').value);
-            const endSlider = parseInt(document.getElementById('endDateSlider').value);
+            let startSlider = parseInt(document.getElementById('startDateSlider').value);
+            let endSlider = parseInt(document.getElementById('endDateSlider').value);
+            // Defense-in-depth: never let start exceed end
+            if (startSlider > endSlider) startSlider = endSlider;
 
             const totalMonths = fullData.length;
             const startIdx = Math.floor((startSlider / 100) * totalMonths);
@@ -1070,26 +1073,16 @@
 
             const filteredData = fullData.slice(startIdx, endIdx + 1);
 
-            // For quarterly data, show last 8 quarters (2 years), for monthly show last 24 months
-            const recentCount = frequency === 'quarterly' ? 8 : 24;
-            const recentData = fullData.slice(-recentCount);
-
-            if (mainChart) mainChart.destroy();
-            if (recentChart) recentChart.destroy();
-
             const mainPrecisionFilter = document.querySelector('input[name="mainPrecisionFilter"]:checked')?.value || 'all';
-            const recentPrecisionFilter = document.querySelector('input[name="recentPrecisionFilter"]:checked')?.value || 'all';
 
             const mainConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, filteredData, mainPrecisionFilter);
-            mainChart = createChart('mainChart', filteredData, mainConfig);
 
-            const recentContainer = document.getElementById('recentChartContainer');
-            const recentVisible = window.getComputedStyle(recentContainer).display !== 'none';
-            if (recentVisible) {
-                const recentConfig = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, recentData, recentPrecisionFilter);
-                recentChart = createChart('recentChart', recentData, recentConfig);
+            if (mainChart) {
+                applyDatasetStyling(mainConfig.datasets);
+                mainChart.data.datasets = mainConfig.datasets;
+                mainChart.update('none');
             } else {
-                recentChart = null;
+                mainChart = createChart('mainChart', mainConfig);
             }
 
             document.getElementById('chartTitle').textContent = mainConfig.title;
@@ -1099,7 +1092,10 @@
             const s = series === 'headline' ? 'hdln' : 'core';
             const f = frequency === 'monthly' ? 'mom' : frequency === 'yearly' ? 'yoy' : 'qoq';
             const freqLabel = frequency === 'monthly' ? 'm/m' : frequency === 'yearly' ? 'y/y' : 'q/q';
-            const dateKey = 'date';
+            const isMobile = window.innerWidth <= 768;
+            const precLabels = isMobile
+                ? { L: 'low', H: 'high', HH: 'v. high', HandAbove: 'high+' }
+                : { L: 'low precision', H: 'high precision', HH: 'very high precision', HandAbove: 'high to very high precision' };
             let datasets;
 
             // Build datasets based on breakdown type
@@ -1133,17 +1129,17 @@
                 if (precisionFilter === 'very_high') {
                     // Very high precision: combine ambiguous + low precision + high precision into expanded ambiguous
                     datasets = [
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                        { label: `Demand (${precLabels.HH})`, data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
                         { label: 'Ambiguous', data: data.map(d => ({
                             x: d.date,
                             y: (d[`amb_${s}_${f}`] || 0) + (d[`dem_L_${s}_${f}`] || 0) + (d[`dem_H_${s}_${f}`] || 0) + (d[`sup_L_${s}_${f}`] || 0) + (d[`sup_H_${s}_${f}`] || 0)
                         })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
+                        { label: `Supply (${precLabels.HH})`, data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                     ];
                 } else if (precisionFilter === 'high_and_above') {
                     // High precision decomposition: merge high + very high precision, expand ambiguous with low precision
                     datasets = [
-                        { label: 'Demand (high to very high precision)', data: data.map(d => ({
+                        { label: `Demand (${precLabels.HandAbove})`, data: data.map(d => ({
                             x: d.date,
                             y: (d[`dem_H_${s}_${f}`] || 0) + (d[`dem_HH_${s}_${f}`] || 0)
                         })), backgroundColor: colors.demandH },
@@ -1151,7 +1147,7 @@
                             x: d.date,
                             y: (d[`amb_${s}_${f}`] || 0) + (d[`dem_L_${s}_${f}`] || 0) + (d[`sup_L_${s}_${f}`] || 0)
                         })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (high to very high precision)', data: data.map(d => ({
+                        { label: `Supply (${precLabels.HandAbove})`, data: data.map(d => ({
                             x: d.date,
                             y: (d[`sup_H_${s}_${f}`] || 0) + (d[`sup_HH_${s}_${f}`] || 0)
                         })), backgroundColor: colors.supplyH }
@@ -1159,13 +1155,13 @@
                 } else {
                     // All precision levels (default) - includes ambiguous as lowest precision
                     datasets = [
-                        { label: 'Demand (low precision)', data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
-                        { label: 'Demand (high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
-                        { label: 'Demand (very high precision)', data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
+                        { label: `Demand (${precLabels.L})`, data: data.map(d => ({ x: d.date, y: d[`dem_L_${s}_${f}`] })), backgroundColor: colors.demandL },
+                        { label: `Demand (${precLabels.H})`, data: data.map(d => ({ x: d.date, y: d[`dem_H_${s}_${f}`] })), backgroundColor: colors.demandH },
+                        { label: `Demand (${precLabels.HH})`, data: data.map(d => ({ x: d.date, y: d[`dem_HH_${s}_${f}`] })), backgroundColor: colors.demandHH },
                         { label: 'Ambiguous', data: data.map(d => ({ x: d.date, y: d[`amb_${s}_${f}`] })), backgroundColor: colors.ambiguous },
-                        { label: 'Supply (low precision)', data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
-                        { label: 'Supply (high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
-                        { label: 'Supply (very high precision)', data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
+                        { label: `Supply (${precLabels.L})`, data: data.map(d => ({ x: d.date, y: d[`sup_L_${s}_${f}`] })), backgroundColor: colors.supplyL },
+                        { label: `Supply (${precLabels.H})`, data: data.map(d => ({ x: d.date, y: d[`sup_H_${s}_${f}`] })), backgroundColor: colors.supplyH },
+                        { label: `Supply (${precLabels.HH})`, data: data.map(d => ({ x: d.date, y: d[`sup_HH_${s}_${f}`] })), backgroundColor: colors.supplyHH }
                     ];
                 }
             } else {
@@ -1224,8 +1220,6 @@
             }
 
             return {
-                data,
-                dateKey,
                 datasets,
                 title
             };
@@ -1245,15 +1239,19 @@
             return allData[sheetName] || [];
         }
 
-        function createChart(canvasId, data, config) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
+        const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-            // Add border and ensure full opacity for each dataset
-            config.datasets.forEach(dataset => {
+        function applyDatasetStyling(datasets) {
+            datasets.forEach(dataset => {
                 dataset.borderColor = dataset.backgroundColor;
                 dataset.borderWidth = 1;
                 dataset.borderSkipped = false;
             });
+        }
+
+        function createChart(canvasId, config) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            applyDatasetStyling(config.datasets);
 
             return new Chart(ctx, {
                 type: 'bar',
@@ -1263,6 +1261,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: false,
                     elements: {
                         bar: {
                             borderWidth: 1
@@ -1312,10 +1311,9 @@
                             mode: 'index',
                             callbacks: {
                                 title: function(context) {
-                                    // Format date as "MMM YYYY" only (no time or day)
+                                    // Format from UTC to avoid off-by-one month shift in negative-UTC timezones
                                     const date = new Date(context[0].parsed.x);
-                                    const options = { year: 'numeric', month: 'short' };
-                                    return date.toLocaleDateString('en-US', options);
+                                    return `${MONTH_NAMES[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
                                 },
                                 label: function(context) {
                                     let label = context.dataset.label || '';
@@ -1351,8 +1349,9 @@
 
             const fullData = getSheetData(frequency, breakdown, showAmbiguous);
 
-            const startSlider = parseInt(document.getElementById('startDateSlider').value);
+            let startSlider = parseInt(document.getElementById('startDateSlider').value);
             const endSlider = parseInt(document.getElementById('endDateSlider').value);
+            if (startSlider > endSlider) startSlider = endSlider;
 
             const totalMonths = fullData.length;
             const startIdx = Math.floor((startSlider / 100) * totalMonths);
