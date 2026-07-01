@@ -253,6 +253,10 @@
             gap: 6px;
         }
 
+        .mobile-date-chips {
+            display: none;
+        }
+
         .preset-chips button {
             flex: 1;
             min-width: 0;
@@ -533,26 +537,21 @@
                 margin-top: 18px;
             }
 
-            #recentChartContainer {
+            #recentChartContainer,
+            #recentChartContainer.mobile-visible {
                 display: none;
             }
 
-            #recentChartContainer.mobile-visible {
-                display: block;
+            .toggle-recent-btn {
+                display: none;
             }
 
-            .toggle-recent-btn {
-                display: block;
-                width: 100%;
-                padding: 12px;
-                background: white;
-                color: #4A7BA7;
-                border: 2px solid #4A7BA7;
-                border-radius: 6px;
-                font-size: 0.95em;
-                font-weight: 600;
-                cursor: pointer;
-                margin-bottom: 15px;
+            .date-range-group {
+                display: none;
+            }
+
+            .mobile-date-chips {
+                display: flex;
             }
 
             .info-box {
@@ -673,7 +672,7 @@
                     </label>
                 </div>
 
-                <div class="control-group">
+                <div class="control-group date-range-group">
                     <label>Date Range:</label>
                     <div class="preset-chips" style="margin-bottom: 10px;">
                         <button type="button" onclick="setDateRange(1)">1Y</button>
@@ -708,6 +707,14 @@
                     </div>
                     <div class="chart-wrapper">
                         <canvas id="mainChart"></canvas>
+                    </div>
+
+                    <div class="preset-chips mobile-date-chips" style="margin-top: 15px;">
+                        <button type="button" onclick="setDateRange(1)">1Y</button>
+                        <button type="button" onclick="setDateRange(3)">3Y</button>
+                        <button type="button" onclick="setDateRange(5)">5Y</button>
+                        <button type="button" onclick="setDateRange(10)">10Y</button>
+                        <button type="button" onclick="setDateRange('all')">All</button>
                     </div>
 
                     <button type="button" class="share-chart-btn-prominent" onclick="shareChart()">
