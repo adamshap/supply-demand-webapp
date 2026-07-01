@@ -734,9 +734,9 @@
                         <button type="button" onclick="setDateRange('all')">All</button>
                     </div>
                     <label style="font-size: 0.85em; font-weight: normal; color: #666;">Start: <span id="startDateLabel">2019-01</span></label>
-                    <input type="range" id="startDateSlider" min="0" max="100" value="85" style="width: 100%;">
+                    <input type="range" id="startDateSlider" min="0" max="1000" value="850" style="width: 100%;">
                     <label style="font-size: 0.85em; font-weight: normal; color: #666;">End: <span id="endDateLabel">2026-04</span></label>
-                    <input type="range" id="endDateSlider" min="0" max="100" value="100" style="width: 100%;">
+                    <input type="range" id="endDateSlider" min="0" max="1000" value="1000" style="width: 100%;">
                 </div>
 
                 <button class="download-btn" onclick="downloadFullDataset()">Download Full Dataset (Excel)</button>
@@ -889,7 +889,8 @@
             if (!data.length) return;
 
             const total = data.length;
-            const endSlider = 100;
+            const SLIDER_MAX = 1000;
+            const endSlider = SLIDER_MAX;
             let startSlider;
             if (years === 'all') {
                 startSlider = 0;
@@ -897,7 +898,9 @@
                 const periodsPerYear = frequency === 'quarterly' ? 4 : 12;
                 const periods = years * periodsPerYear;
                 const startIdx = Math.max(0, total - periods);
-                startSlider = Math.round((startIdx / total) * 100);
+                // Pick a slider value whose floor(v/MAX * total) exactly recovers startIdx.
+                // Use +0.5 in the numerator so we land in the middle of the target step.
+                startSlider = Math.min(SLIDER_MAX, Math.floor(((startIdx + 0.5) / total) * SLIDER_MAX));
             }
             document.getElementById('startDateSlider').value = startSlider;
             document.getElementById('endDateSlider').value = endSlider;
@@ -1122,8 +1125,8 @@
             if (startSlider > endSlider) startSlider = endSlider;
 
             const totalMonths = fullData.length;
-            const startIdx = Math.floor((startSlider / 100) * totalMonths);
-            const endIdx = Math.min(Math.floor((endSlider / 100) * totalMonths), totalMonths - 1);
+            const startIdx = Math.floor((startSlider / 1000) * totalMonths);
+            const endIdx = Math.min(Math.floor((endSlider / 1000) * totalMonths), totalMonths - 1);
 
             const startDate = fullData[startIdx]?.date || fullData[0]?.date;
             const endDate = fullData[endIdx]?.date || fullData[fullData.length - 1]?.date;
@@ -1415,8 +1418,8 @@
             if (startSlider > endSlider) startSlider = endSlider;
 
             const totalMonths = fullData.length;
-            const startIdx = Math.floor((startSlider / 100) * totalMonths);
-            const endIdx = Math.min(Math.floor((endSlider / 100) * totalMonths), totalMonths - 1);
+            const startIdx = Math.floor((startSlider / 1000) * totalMonths);
+            const endIdx = Math.min(Math.floor((endSlider / 1000) * totalMonths), totalMonths - 1);
 
             const filteredData = fullData.slice(startIdx, endIdx + 1);
 
