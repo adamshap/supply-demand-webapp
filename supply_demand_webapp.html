@@ -284,16 +284,23 @@
             transform: scale(0.94);
         }
 
+        /* Post-release "spring back" feedback. On hover devices (desktop) we also flash
+           the button blue to signal the selection; on touch devices we only animate the
+           depression so it feels like a native button press without a lingering selected state. */
         .preset-chips button.just-clicked {
-            background: #4A7BA7;
-            color: white;
-            border-color: #4A7BA7;
-            animation: chip-pop 450ms ease-out;
+            animation: chip-press 180ms ease-out;
         }
 
-        @keyframes chip-pop {
+        @media (hover: hover) {
+            .preset-chips button.just-clicked {
+                background: #4A7BA7;
+                color: white;
+                border-color: #4A7BA7;
+            }
+        }
+
+        @keyframes chip-press {
             0%   { transform: scale(0.94); }
-            35%  { transform: scale(1.08); }
             100% { transform: scale(1); }
         }
 
@@ -866,7 +873,7 @@
                 const onclick = btn.getAttribute('onclick') || '';
                 if (onclick === `setDateRange(${key})`) {
                     btn.classList.add('just-clicked');
-                    setTimeout(() => btn.classList.remove('just-clicked'), 400);
+                    setTimeout(() => btn.classList.remove('just-clicked'), 200);
                 }
             });
 
