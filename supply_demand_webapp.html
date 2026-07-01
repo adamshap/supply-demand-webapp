@@ -7,6 +7,25 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Supply and Demand Driven PCE Inflation</title>
+    <meta name="description" content="Interactive decomposition of U.S. PCE inflation into supply-driven, demand-driven, and ambiguous components. Shapiro (2026), JMCB.">
+
+    <!-- Open Graph / social preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://adamshap.github.io/supply-demand-webapp/supply_demand_webapp.html">
+    <meta property="og:title" content="Supply and Demand Driven PCE Inflation">
+    <meta property="og:description" content="Interactive decomposition of U.S. PCE inflation into supply-driven, demand-driven, and ambiguous components. Shapiro (2026), JMCB.">
+    <meta property="og:image" content="https://adamshap.github.io/supply-demand-webapp/preview.png">
+    <meta property="og:site_name" content="Federal Reserve Bank of San Francisco">
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Supply and Demand Driven PCE Inflation">
+    <meta name="twitter:description" content="Interactive decomposition of U.S. PCE inflation into supply-driven, demand-driven, and ambiguous components. Shapiro (2026), JMCB.">
+    <meta name="twitter:image" content="https://adamshap.github.io/supply-demand-webapp/preview.png">
+
+    <!-- Inline SVG favicon: SF Fed blue bar-chart mark -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='10' fill='%234A7BA7'/><rect x='14' y='30' width='9' height='22' fill='%2378B4E6'/><rect x='27.5' y='18' width='9' height='34' fill='%23FAEBD2'/><rect x='41' y='24' width='9' height='28' fill='%23FF8C8C'/></svg>">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
@@ -372,11 +391,12 @@
                 z-index: 100;
                 max-height: 70vh;
                 overflow-y: auto;
+                transition: padding-bottom 260ms ease;
             }
 
             .controls.collapsed {
-                max-height: 78px;
                 overflow: hidden;
+                padding-bottom: 0;
             }
 
             .mobile-toggle {
@@ -407,6 +427,15 @@
                 background: #3d6a8f;
             }
 
+            #toggleIcon {
+                display: inline-block;
+                transition: transform 260ms ease;
+            }
+
+            .controls:not(.collapsed) #toggleIcon {
+                transform: rotate(180deg);
+            }
+
             .desktop-only {
                 display: none !important;
             }
@@ -415,10 +444,16 @@
                 display: block;
                 padding-top: 15px;
                 background: white;
+                max-height: 3000px;
+                opacity: 1;
+                overflow: hidden;
+                transition: max-height 260ms ease, opacity 200ms ease, padding-top 260ms ease;
             }
 
             .controls.collapsed .controls-content {
-                display: none;
+                max-height: 0;
+                opacity: 0;
+                padding-top: 0;
             }
 
             .charts {
@@ -880,18 +915,10 @@
             updateCharts();
         }
 
-        // Mobile controls toggle
+        // Mobile controls toggle. Arrow rotation is handled entirely in CSS,
+        // so the button text stays consistent while the icon animates.
         function toggleControls() {
-            const panel = document.getElementById('controlsPanel');
-            const icon = document.getElementById('toggleIcon');
-
-            if (panel.classList.contains('collapsed')) {
-                panel.classList.remove('collapsed');
-                icon.textContent = '▲';
-            } else {
-                panel.classList.add('collapsed');
-                icon.textContent = '▼';
-            }
+            document.getElementById('controlsPanel').classList.toggle('collapsed');
         }
 
         // Auto-expand controls on desktop, start collapsed on mobile
