@@ -1346,6 +1346,7 @@
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
             const breakdown = document.getElementById('breakdown').value;
             const showAmbiguous = document.getElementById('showAmbiguous').checked;
+            const precisionFilter = document.querySelector('input[name="mainPrecisionFilter"]:checked')?.value || 'all';
 
             const fullData = getSheetData(frequency, breakdown, showAmbiguous);
 
@@ -1364,26 +1365,31 @@
                 return;
             }
 
-            const startDate = filteredData[0]?.date?.substring(0, 7) || 'start';
-            const endDate = filteredData[filteredData.length - 1]?.date?.substring(0, 7) || 'end';
-
-            downloadDataAsCSV(filteredData, `supply_demand_${series}_${frequency}_${breakdown}_${startDate}_to_${endDate}.csv`);
-        }
-
-        function downloadDataAsCSV(data, filename) {
-            // Get headers
-            const headers = Object.keys(data[0]);
-
-            // Build CSV
-            let csv = headers.join(',') + '\n';
-            data.forEach(row => {
-                csv += headers.map(h => {
-                    const val = row[h];
-                    return typeof val === 'string' && val.includes(',') ? `"${val}"` : val;
-                }).join(',') + '\n';
+            // Build the CSV from the exact datasets that are currently on the chart,
+            // so it reflects the series / frequency / precision-filter selections.
+            const config = getChartConfigWithData(series, frequency, breakdown, showAmbiguous, filteredData, precisionFilter);
+            const labels = config.datasets.map(ds => ds.label);
+            const rows = filteredData.map((d, i) => {
+                const dateStr = (d.date || '').substring(0, 7);
+                const values = config.datasets.map(ds => {
+                    const point = ds.data[i];
+                    return point && point.y != null ? point.y : '';
+                });
+                return [dateStr, ...values];
             });
 
-            // Download
+            const headers = ['date', ...labels];
+            const escape = v => {
+                const s = String(v);
+                return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+            };
+            const csv = [headers, ...rows].map(row => row.map(escape).join(',')).join('\n') + '\n';
+
+            const startDate = filteredData[0]?.date?.substring(0, 7) || 'start';
+            const endDate = filteredData[filteredData.length - 1]?.date?.substring(0, 7) || 'end';
+            const filterSuffix = breakdown === 'precision' && precisionFilter !== 'all' ? `_${precisionFilter}` : '';
+            const filename = `supply_demand_${series}_${frequency}_${breakdown}${filterSuffix}_${startDate}_to_${endDate}.csv`;
+
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
