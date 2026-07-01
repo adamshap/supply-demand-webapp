@@ -733,31 +733,8 @@
             const startDate = document.getElementById('startDateLabel').textContent;
             const endDate = document.getElementById('endDateLabel').textContent;
 
-            // Render the chart into an offscreen Chart.js instance with legend forced to bottom,
-            // so the on-screen chart never flashes.
             const w = sourceCanvas.width;
             const h = sourceCanvas.height;
-            const offCanvas = document.createElement('canvas');
-            offCanvas.width = w;
-            offCanvas.height = h;
-
-            const offConfig = {
-                type: 'bar',
-                data: { datasets: mainChart.data.datasets.map(ds => ({ ...ds, data: ds.data })) },
-                options: JSON.parse(JSON.stringify(mainChart.options))
-            };
-            // Restore non-serializable callbacks that JSON.parse dropped
-            offConfig.options.plugins = offConfig.options.plugins || {};
-            offConfig.options.plugins.tooltip = mainChart.options.plugins.tooltip;
-            offConfig.options.plugins.legend = offConfig.options.plugins.legend || {};
-            offConfig.options.plugins.legend.position = 'bottom';
-            offConfig.options.animation = false;
-            offConfig.options.responsive = false;
-            offConfig.options.maintainAspectRatio = false;
-
-            const offChart = new Chart(offCanvas.getContext('2d'), offConfig);
-            // Chart.js needs a tick to finish first paint
-            await new Promise(resolve => requestAnimationFrame(resolve));
 
             // Build composite canvas: title + chart + footer
             const titleHeight = 72;
@@ -789,14 +766,13 @@
             ctx.fillText(title, w / 2, titleHeight / 2);
             ctx.textBaseline = 'alphabetic';
 
-            ctx.drawImage(offCanvas, 0, titleHeight);
+            ctx.drawImage(sourceCanvas, 0, titleHeight);
 
             ctx.fillStyle = '#666';
             ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
             ctx.fillText(`Shapiro (2026), JMCB  •  Federal Reserve Bank of San Francisco  •  Data through ${endDate}`, w / 2, titleHeight + h + 30);
 
             const blob = await new Promise(resolve => out.toBlob(resolve, 'image/png'));
-            offChart.destroy();
 
             const filename = `supply_demand_${startDate}_to_${endDate}.png`;
             const file = new File([blob], filename, { type: 'image/png' });
