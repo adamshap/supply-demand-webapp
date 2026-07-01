@@ -271,10 +271,12 @@
             transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
         }
 
-        .preset-chips button:hover {
-            background: #4A7BA7;
-            color: white;
-            border-color: #4A7BA7;
+        @media (hover: hover) {
+            .preset-chips button:hover {
+                background: #4A7BA7;
+                color: white;
+                border-color: #4A7BA7;
+            }
         }
 
         .preset-chips button:active {
@@ -286,6 +288,13 @@
             background: #4A7BA7;
             color: white;
             border-color: #4A7BA7;
+            animation: chip-pop 450ms ease-out;
+        }
+
+        @keyframes chip-pop {
+            0%   { transform: scale(0.94); }
+            35%  { transform: scale(1.08); }
+            100% { transform: scale(1); }
         }
 
         .download-btn:hover {
