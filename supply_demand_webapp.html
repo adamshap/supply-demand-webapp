@@ -733,6 +733,16 @@
             const startDate = document.getElementById('startDateLabel').textContent;
             const endDate = document.getElementById('endDateLabel').textContent;
 
+            // Force legend to bottom for the shared image. update() is synchronous,
+            // so we can capture the canvas before the browser has a chance to paint
+            // the mutated on-screen chart, then restore.
+            const originalLegendPosition = mainChart.options.plugins.legend.position;
+            const mutated = originalLegendPosition !== 'bottom';
+            if (mutated) {
+                mainChart.options.plugins.legend.position = 'bottom';
+                mainChart.update('none');
+            }
+
             const w = sourceCanvas.width;
             const h = sourceCanvas.height;
 
@@ -772,7 +782,16 @@
             ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
             ctx.fillText(`Shapiro (2026), JMCB  •  Federal Reserve Bank of San Francisco  •  Data through ${endDate}`, w / 2, titleHeight + h + 30);
 
-            const blob = await new Promise(resolve => out.toBlob(resolve, 'image/png'));
+            // Snapshot the composite synchronously via toDataURL, then restore the
+            // on-screen chart before yielding to the event loop. This avoids the
+            // legend flash even on mobile.
+            const dataUrl = out.toDataURL('image/png');
+            if (mutated) {
+                mainChart.options.plugins.legend.position = originalLegendPosition;
+                mainChart.update('none');
+            }
+
+            const blob = await (await fetch(dataUrl)).blob();
 
             const filename = `supply_demand_${startDate}_to_${endDate}.png`;
             const file = new File([blob], filename, { type: 'image/png' });
