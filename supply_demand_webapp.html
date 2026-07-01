@@ -733,10 +733,16 @@
                         <button type="button" onclick="setDateRange(10)">10Y</button>
                         <button type="button" onclick="setDateRange('all')">All</button>
                     </div>
-                    <label style="font-size: 0.85em; font-weight: normal; color: #666;">Start: <span id="startDateLabel">2019-01</span></label>
-                    <input type="range" id="startDateSlider" min="0" max="1000" value="850" style="width: 100%;">
-                    <label style="font-size: 0.85em; font-weight: normal; color: #666;">End: <span id="endDateLabel">2026-04</span></label>
-                    <input type="range" id="endDateSlider" min="0" max="1000" value="1000" style="width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <label for="startDateInput" style="font-size: 0.85em; font-weight: normal; color: #666; min-width: 40px;">Start:</label>
+                        <input type="month" id="startDateInput" style="flex: 1; font-size: 0.85em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 3px;">
+                    </div>
+                    <input type="range" id="startDateSlider" min="0" max="1" step="1" value="0" style="width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; margin-bottom: 4px;">
+                        <label for="endDateInput" style="font-size: 0.85em; font-weight: normal; color: #666; min-width: 40px;">End:</label>
+                        <input type="month" id="endDateInput" style="flex: 1; font-size: 0.85em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 3px;">
+                    </div>
+                    <input type="range" id="endDateSlider" min="0" max="1" step="1" value="1" style="width: 100%;">
                 </div>
 
                 <button class="download-btn" onclick="downloadFullDataset()">Download Full Dataset (Excel)</button>
@@ -791,8 +797,8 @@
             const sourceCanvas = document.getElementById('mainChart');
             const title = document.getElementById('chartTitle').textContent;
 
-            const startDate = document.getElementById('startDateLabel').textContent;
-            const endDate = document.getElementById('endDateLabel').textContent;
+            const startDate = document.getElementById('startDateInput').value;
+            const endDate = document.getElementById('endDateInput').value;
 
             // Force legend to bottom for the shared image. update() is synchronous,
             // so we can capture the canvas before the browser has a chance to paint
@@ -889,22 +895,24 @@
             if (!data.length) return;
 
             const total = data.length;
-            const SLIDER_MAX = 1000;
-            const endSlider = SLIDER_MAX;
-            let startSlider;
+            const endIdx = total - 1;
+            let startIdx;
             if (years === 'all') {
-                startSlider = 0;
+                startIdx = 0;
             } else {
                 const periodsPerYear = frequency === 'quarterly' ? 4 : 12;
-                const periods = years * periodsPerYear;
-                const startIdx = Math.max(0, total - periods);
-                // Smallest slider value s such that floor(s/SLIDER_MAX * total) === startIdx.
-                // ceil guarantees the reverse computation lands on the intended index rather
-                // than the one before it.
-                startSlider = Math.min(SLIDER_MAX, Math.ceil((startIdx * SLIDER_MAX) / total));
+                startIdx = Math.max(0, total - years * periodsPerYear);
             }
-            document.getElementById('startDateSlider').value = startSlider;
-            document.getElementById('endDateSlider').value = endSlider;
+            const startSliderEl = document.getElementById('startDateSlider');
+            const endSliderEl = document.getElementById('endDateSlider');
+            const startInputEl = document.getElementById('startDateInput');
+            const endInputEl = document.getElementById('endDateInput');
+            startSliderEl.max = endIdx;
+            endSliderEl.max = endIdx;
+            startSliderEl.value = startIdx;
+            endSliderEl.value = endIdx;
+            startInputEl.value = indexToMonthStr(startIdx, data);
+            endInputEl.value = indexToMonthStr(endIdx, data);
 
             // Flash the matching chip(s) — both sidebar and mobile row share the same onclick,
             // so we identify them by attribute value.
@@ -1050,18 +1058,29 @@
         }
         const startSliderEl = document.getElementById('startDateSlider');
         const endSliderEl = document.getElementById('endDateSlider');
-        startSliderEl.addEventListener('input', function() {
-            if (parseInt(startSliderEl.value) > parseInt(endSliderEl.value)) {
-                startSliderEl.value = endSliderEl.value;
-            }
-            debouncedUpdateCharts();
-        });
-        endSliderEl.addEventListener('input', function() {
-            if (parseInt(endSliderEl.value) < parseInt(startSliderEl.value)) {
-                endSliderEl.value = startSliderEl.value;
-            }
-            debouncedUpdateCharts();
-        });
+        const startInputEl = document.getElementById('startDateInput');
+        const endInputEl = document.getElementById('endDateInput');
+        // When the slider moves, push its index into the month input so updateCharts()
+        // (which treats month inputs as the source of truth) picks up the new value.
+        function syncFromSlider(which) {
+            const frequency = document.querySelector('input[name="frequency"]:checked').value;
+            const breakdown = document.getElementById('breakdown').value;
+            const showAmbiguous = document.getElementById('showAmbiguous').checked;
+            const data = getSheetData(frequency, breakdown, showAmbiguous);
+            if (!data.length) return;
+            let sIdx = parseInt(startSliderEl.value);
+            let eIdx = parseInt(endSliderEl.value);
+            if (which === 'start' && sIdx > eIdx) sIdx = eIdx;
+            if (which === 'end' && eIdx < sIdx) eIdx = sIdx;
+            startSliderEl.value = sIdx;
+            endSliderEl.value = eIdx;
+            startInputEl.value = indexToMonthStr(sIdx, data);
+            endInputEl.value = indexToMonthStr(eIdx, data);
+        }
+        startSliderEl.addEventListener('input', function() { syncFromSlider('start'); debouncedUpdateCharts(); });
+        endSliderEl.addEventListener('input', function() { syncFromSlider('end'); debouncedUpdateCharts(); });
+        startInputEl.addEventListener('change', updateCharts);
+        endInputEl.addEventListener('change', updateCharts);
 
         // Precision filter listeners
         document.querySelectorAll('input[name="mainPrecisionFilter"]').forEach(input => {
@@ -1112,6 +1131,33 @@
             }
         }
 
+        // "2020-03-01T12:00:00Z" -> "2020-03" (quarterly dates already fall on Jan/Apr/Jul/Oct
+        // month-1, so the same slicing works for both frequencies).
+        function indexToMonthStr(idx, data) {
+            const d = data[idx]?.date;
+            return d ? d.substring(0, 7) : '';
+        }
+
+        // Snap a "YYYY-MM" input to the nearest available data index. Nearest (not floor)
+        // matters for quarterly: typing "2020-02" should land on Q1 (Jan) not fall through.
+        function monthStrToIndex(monthStr, data) {
+            if (!data.length) return 0;
+            const targetMs = Date.parse(monthStr + '-01T12:00:00Z');
+            if (isNaN(targetMs)) return 0;
+            let bestIdx = 0;
+            let bestDiff = Infinity;
+            for (let i = 0; i < data.length; i++) {
+                const msDiff = Math.abs(Date.parse(data[i].date) - targetMs);
+                if (msDiff < bestDiff) {
+                    bestDiff = msDiff;
+                    bestIdx = i;
+                }
+            }
+            return bestIdx;
+        }
+
+        let dateRangeInitialized = false;
+
         function updateCharts() {
             const series = document.querySelector('input[name="series"]:checked').value;
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
@@ -1119,21 +1165,49 @@
             const showAmbiguous = document.getElementById('showAmbiguous').checked;
 
             const fullData = getSheetData(frequency, breakdown, showAmbiguous);
+            if (!fullData.length) return;
 
-            let startSlider = parseInt(document.getElementById('startDateSlider').value);
-            let endSlider = parseInt(document.getElementById('endDateSlider').value);
-            // Defense-in-depth: never let start exceed end
-            if (startSlider > endSlider) startSlider = endSlider;
+            const startSliderEl = document.getElementById('startDateSlider');
+            const endSliderEl = document.getElementById('endDateSlider');
+            const startInputEl = document.getElementById('startDateInput');
+            const endInputEl = document.getElementById('endDateInput');
 
-            const totalMonths = fullData.length;
-            const startIdx = Math.floor((startSlider / 1000) * totalMonths);
-            const endIdx = Math.min(Math.floor((endSlider / 1000) * totalMonths), totalMonths - 1);
+            // Slider max = last valid index so one step = one period (fixes "skipping").
+            const maxIdx = fullData.length - 1;
+            startSliderEl.max = maxIdx;
+            endSliderEl.max = maxIdx;
 
-            const startDate = fullData[startIdx]?.date || fullData[0]?.date;
-            const endDate = fullData[endIdx]?.date || fullData[fullData.length - 1]?.date;
+            let startIdx, endIdx;
+            if (!dateRangeInitialized) {
+                // Default to a "since 2019" view (roughly the old default), snapped
+                // to whatever index is closest in the current sheet.
+                startIdx = monthStrToIndex('2019-01', fullData);
+                endIdx = maxIdx;
+                dateRangeInitialized = true;
+            } else {
+                // Month inputs are the source of truth so date selection survives
+                // sheet swaps (monthly ↔ quarterly have different lengths).
+                const startMonth = startInputEl.value;
+                const endMonth = endInputEl.value;
+                startIdx = startMonth ? monthStrToIndex(startMonth, fullData) : (parseInt(startSliderEl.value) || 0);
+                endIdx = endMonth ? monthStrToIndex(endMonth, fullData) : parseInt(endSliderEl.value);
+                if (isNaN(endIdx)) endIdx = maxIdx;
+            }
+            startIdx = Math.max(0, Math.min(startIdx, maxIdx));
+            endIdx = Math.max(0, Math.min(endIdx, maxIdx));
+            if (startIdx > endIdx) startIdx = endIdx;
 
-            document.getElementById('startDateLabel').textContent = startDate ? startDate.substring(0, 7) : '';
-            document.getElementById('endDateLabel').textContent = endDate ? endDate.substring(0, 7) : '';
+            // Sync every control to the resolved indices
+            startSliderEl.value = startIdx;
+            endSliderEl.value = endIdx;
+            startInputEl.value = indexToMonthStr(startIdx, fullData);
+            endInputEl.value = indexToMonthStr(endIdx, fullData);
+            const minMonth = indexToMonthStr(0, fullData);
+            const maxMonth = indexToMonthStr(maxIdx, fullData);
+            startInputEl.min = minMonth;
+            startInputEl.max = maxMonth;
+            endInputEl.min = minMonth;
+            endInputEl.max = maxMonth;
 
             const filteredData = fullData.slice(startIdx, endIdx + 1);
 
@@ -1413,14 +1487,20 @@
             const precisionFilter = document.querySelector('input[name="mainPrecisionFilter"]:checked')?.value || 'all';
 
             const fullData = getSheetData(frequency, breakdown, showAmbiguous);
+            if (!fullData.length) {
+                alert('No data available to download');
+                return;
+            }
 
-            let startSlider = parseInt(document.getElementById('startDateSlider').value);
-            const endSlider = parseInt(document.getElementById('endDateSlider').value);
-            if (startSlider > endSlider) startSlider = endSlider;
-
-            const totalMonths = fullData.length;
-            const startIdx = Math.floor((startSlider / 1000) * totalMonths);
-            const endIdx = Math.min(Math.floor((endSlider / 1000) * totalMonths), totalMonths - 1);
+            const maxIdx = fullData.length - 1;
+            const startMonth = document.getElementById('startDateInput').value;
+            const endMonth = document.getElementById('endDateInput').value;
+            let startIdx = startMonth ? monthStrToIndex(startMonth, fullData) : parseInt(document.getElementById('startDateSlider').value) || 0;
+            let endIdx = endMonth ? monthStrToIndex(endMonth, fullData) : parseInt(document.getElementById('endDateSlider').value);
+            if (isNaN(endIdx)) endIdx = maxIdx;
+            startIdx = Math.max(0, Math.min(startIdx, maxIdx));
+            endIdx = Math.max(0, Math.min(endIdx, maxIdx));
+            if (startIdx > endIdx) startIdx = endIdx;
 
             const filteredData = fullData.slice(startIdx, endIdx + 1);
 
