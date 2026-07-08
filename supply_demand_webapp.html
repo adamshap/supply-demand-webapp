@@ -1600,15 +1600,6 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: { duration: 400 },
-                    // Bars fill their category slot fully — no white gaps between adjacent months.
-                    // Otherwise Chart.js defaults (~72% width) make the colors look washed out on
-                    // wide desktop views.
-                    datasets: {
-                        bar: {
-                            categoryPercentage: 1.0,
-                            barPercentage: 1.0
-                        }
-                    },
                     elements: {
                         bar: {
                             borderWidth: 1
