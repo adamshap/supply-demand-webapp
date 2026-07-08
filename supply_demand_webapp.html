@@ -44,6 +44,19 @@
             line-height: 1.6;
         }
 
+        /* Visible focus ring for keyboard users across all interactive controls.
+           :focus-visible only shows on keyboard nav, not mouse clicks. */
+        .download-btn:focus-visible,
+        .share-chart-btn-prominent:focus-visible,
+        .preset-chips button:focus-visible,
+        .mobile-toggle:focus-visible,
+        .radio-group input:focus-visible,
+        .precision-filters input:focus-visible,
+        .checkbox-row input:focus-visible {
+            outline: 2px solid #005A93;
+            outline-offset: 2px;
+        }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -110,7 +123,8 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.06);
             width: 240px;
             flex-shrink: 0;
             height: fit-content;
@@ -126,6 +140,17 @@
             margin-bottom: 10px;
             color: #4A7BA7;
             font-size: 0.95em;
+        }
+
+        /* Group heading (e.g. "Inflation Series:") — quiet uppercase so the chart,
+           not the control panel, is the visual hero. Scoped to a class so the
+           radio/checkbox option labels below keep their normal styling. */
+        .control-group > .group-heading {
+            color: #6b7280;
+            font-size: 0.72em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
 
         .control-group select {
@@ -161,9 +186,32 @@
             font-weight: normal;
             color: #333;
             cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        @media (hover: hover) {
+            .radio-group label:hover,
+            .precision-filters label:hover,
+            .checkbox-row:hover {
+                color: #4A7BA7;
+            }
         }
 
         .radio-group input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            color: #333;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .checkbox-row input[type="checkbox"] {
             margin-right: 8px;
             cursor: pointer;
         }
@@ -268,7 +316,8 @@
             background: white;
             padding: 25px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.06);
             position: relative;
         }
 
@@ -859,7 +908,7 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Inflation Series:</label>
+                    <label class="group-heading">Inflation Series</label>
                     <div class="radio-group">
                         <label><input type="radio" name="series" value="headline" checked> Headline PCE</label>
                         <label><input type="radio" name="series" value="core"> Core PCE (ex. food & energy)</label>
@@ -867,7 +916,7 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Frequency:</label>
+                    <label class="group-heading">Frequency</label>
                     <div class="radio-group">
                         <label><input type="radio" name="frequency" value="yearly" checked> Year-over-year (y/y)</label>
                         <label><input type="radio" name="frequency" value="monthly"> Monthly (m/m)</label>
@@ -876,7 +925,7 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Breakdown:</label>
+                    <label class="group-heading">Breakdown</label>
                     <select id="breakdown">
                         <option value="baseline">Baseline</option>
                         <option value="precision">Precision levels</option>
@@ -887,14 +936,14 @@
                 </div>
 
                 <div class="control-group">
-                    <label style="display: flex; align-items: center; font-weight: normal; cursor: pointer;">
-                        <input type="checkbox" id="showAmbiguous" checked style="margin-right: 8px; cursor: pointer;">
+                    <label class="checkbox-row">
+                        <input type="checkbox" id="showAmbiguous" checked>
                         <span>Model with ambiguous category</span>
                     </label>
                 </div>
 
                 <div class="control-group date-range-group">
-                    <label>Date Range:</label>
+                    <label class="group-heading">Date Range</label>
                     <div class="preset-chips" style="margin-bottom: 10px;">
                         <button type="button" onclick="setDateRange(1)">1Y</button>
                         <button type="button" onclick="setDateRange(2)">2Y</button>
