@@ -229,15 +229,16 @@
         }
 
         .download-btn {
-            background-color: #4A7BA7;
-            color: white;
-            border: none;
+            background-color: white;
+            color: #4A7BA7;
+            border: 1px solid #4A7BA7;
             padding: 10px 20px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9em;
+            font-weight: 600;
             margin-top: 15px;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, color 0.2s;
         }
 
         .share-chart-btn-prominent {
@@ -259,6 +260,11 @@
 
         .share-chart-btn-prominent:hover {
             background: #005A93;
+        }
+
+        .share-chart-btn-prominent:disabled {
+            background: #7a9bbf;
+            cursor: wait;
         }
 
         .share-chart-btn-prominent .share-icon {
@@ -298,6 +304,12 @@
             }
         }
 
+        .preset-chips button.active {
+            background: #4A7BA7;
+            color: white;
+            border-color: #4A7BA7;
+        }
+
         .preset-chips button:active {
             background: #005A93;
             transform: scale(0.94);
@@ -324,7 +336,8 @@
         }
 
         .download-btn:hover {
-            background-color: #005A93;
+            background-color: #4A7BA7;
+            color: white;
         }
 
         footer {
@@ -389,7 +402,7 @@
                 position: sticky;
                 bottom: 0;
                 z-index: 100;
-                max-height: 70vh;
+                max-height: 55vh;
                 overflow-y: auto;
                 transition: padding-bottom 260ms ease;
             }
@@ -791,8 +804,18 @@
     </footer>
 
     <script>
+        let sharingChart = false;
         async function shareChart() {
-            if (!mainChart) return;
+            if (!mainChart || sharingChart) return;
+            sharingChart = true;
+
+            const shareBtn = document.querySelector('.share-chart-btn-prominent');
+            const originalLabel = shareBtn ? shareBtn.innerHTML : '';
+            if (shareBtn) {
+                shareBtn.disabled = true;
+                shareBtn.innerHTML = '<span class="share-icon">↗</span> Preparing…';
+            }
+            try {
 
             const sourceCanvas = document.getElementById('mainChart');
             const title = document.getElementById('chartTitle').textContent;
@@ -885,6 +908,13 @@
             a.download = filename;
             a.click();
             URL.revokeObjectURL(url);
+            } finally {
+                if (shareBtn) {
+                    shareBtn.disabled = false;
+                    shareBtn.innerHTML = originalLabel;
+                }
+                sharingChart = false;
+            }
         }
 
         function setDateRange(years) {
@@ -914,18 +944,20 @@
             startInputEl.value = indexToMonthStr(startIdx, data);
             endInputEl.value = indexToMonthStr(endIdx, data);
 
-            // Flash the matching chip(s) — both sidebar and mobile row share the same onclick,
-            // so we identify them by attribute value.
+            // Flash + persistent active state on the matching chip(s). Sidebar and mobile
+            // rows share the same onclick, so we identify them by attribute value.
             const key = years === 'all' ? "'all'" : String(years);
             document.querySelectorAll('.preset-chips button').forEach(btn => {
                 const onclick = btn.getAttribute('onclick') || '';
-                if (onclick === `setDateRange(${key})`) {
+                const matches = onclick === `setDateRange(${key})`;
+                btn.classList.toggle('active', matches);
+                if (matches) {
                     btn.classList.add('just-clicked');
                     setTimeout(() => btn.classList.remove('just-clicked'), 200);
                 }
             });
 
-            updateCharts();
+            updateCharts('none');
         }
 
         // Mobile controls toggle. Arrow rotation is handled entirely in CSS,
@@ -1054,7 +1086,12 @@
         let sliderDebounceTimer = null;
         function debouncedUpdateCharts() {
             clearTimeout(sliderDebounceTimer);
-            sliderDebounceTimer = setTimeout(updateCharts, 150);
+            // Slider drag → point count changes → snap instead of tween.
+            // Also clear the preset chip selection since the user is picking a custom range.
+            sliderDebounceTimer = setTimeout(() => {
+                document.querySelectorAll('.preset-chips button.active').forEach(b => b.classList.remove('active'));
+                updateCharts('none');
+            }, 150);
         }
         const startSliderEl = document.getElementById('startDateSlider');
         const endSliderEl = document.getElementById('endDateSlider');
@@ -1079,8 +1116,13 @@
         }
         startSliderEl.addEventListener('input', function() { syncFromSlider('start'); debouncedUpdateCharts(); });
         endSliderEl.addEventListener('input', function() { syncFromSlider('end'); debouncedUpdateCharts(); });
-        startInputEl.addEventListener('change', updateCharts);
-        endInputEl.addEventListener('change', updateCharts);
+        // Typing a month manually clears any active preset and snaps (no tween since point count changes).
+        function onManualDateChange() {
+            document.querySelectorAll('.preset-chips button.active').forEach(b => b.classList.remove('active'));
+            updateCharts('none');
+        }
+        startInputEl.addEventListener('change', onManualDateChange);
+        endInputEl.addEventListener('change', onManualDateChange);
 
         // Precision filter listeners
         document.querySelectorAll('input[name="mainPrecisionFilter"]').forEach(input => {
@@ -1158,7 +1200,10 @@
 
         let dateRangeInitialized = false;
 
-        function updateCharts() {
+        // updateMode: undefined = animate (smooth tween for series/frequency/breakdown changes);
+        // 'none' = snap (used for slider drags and date-range chips, where the point count
+        // changes and tweening between mismatched arrays stutters).
+        function updateCharts(updateMode) {
             const series = document.querySelector('input[name="series"]:checked').value;
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
             const breakdown = document.getElementById('breakdown').value;
@@ -1218,7 +1263,7 @@
             if (mainChart) {
                 applyDatasetStyling(mainConfig.datasets);
                 mainChart.data.datasets = mainConfig.datasets;
-                mainChart.update('none');
+                mainChart.update(updateMode);
             } else {
                 mainChart = createChart('mainChart', mainConfig);
             }
@@ -1399,7 +1444,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: false,
+                    animation: { duration: 400 },
                     elements: {
                         bar: {
                             borderWidth: 1
