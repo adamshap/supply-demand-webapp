@@ -841,7 +841,7 @@
 
                 <div class="controls-content">
                     <div class="info-box">
-                    <p>Each month, PCE price categories are split by whether the price move is more likely driven by supply factors (e.g. shortages, input costs) or by consumer demand. Categories where neither signal dominates are labeled <em>ambiguous</em>.</p>
+                    <p>Each month, PCE price categories are split by whether the price move is more likely driven by supply factors or by consumer demand. Categories where neither signal dominates are labeled <em>ambiguous</em>.</p>
                 </div>
 
                 <div class="control-group">
@@ -1600,6 +1600,15 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: { duration: 400 },
+                    // Bars fill their category slot fully — no white gaps between adjacent months.
+                    // Otherwise Chart.js defaults (~72% width) make the colors look washed out on
+                    // wide desktop views.
+                    datasets: {
+                        bar: {
+                            categoryPercentage: 1.0,
+                            barPercentage: 1.0
+                        }
+                    },
                     elements: {
                         bar: {
                             borderWidth: 1
