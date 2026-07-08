@@ -204,6 +204,15 @@
             cursor: pointer;
         }
 
+        /* Firefox paints its own default track over the input background when
+           appearance is reset; explicit rule keeps track flat and matches Chrome. */
+        input[type="range"]::-moz-range-track {
+            background: #e5e7eb;
+            height: 6px;
+            border-radius: 3px;
+            border: none;
+        }
+
         input[type="range"]:hover::-webkit-slider-thumb {
             transform: scale(1.1);
         }
@@ -316,18 +325,23 @@
             border-left: 3px solid #4A7BA7;
             border-radius: 6px;
             padding: 0 12px;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 0;
+            margin-bottom: 0;
             max-height: 0;
             opacity: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease, margin-top 0.3s ease;
+            /* Margins are zero when collapsed and expand with the box; otherwise
+               they leave a ~30px empty gap above the chart when breakdown is not "precision". */
+            transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease,
+                        margin-top 0.3s ease, margin-bottom 0.3s ease;
         }
 
         .precision-filters.visible {
-            max-height: 300px;
+            max-height: 500px;
             opacity: 1;
             padding: 12px;
+            margin-top: 15px;
+            margin-bottom: 15px;
         }
 
         .precision-filters h4 {
@@ -777,9 +791,9 @@
                 position: relative;
                 top: auto;
                 right: auto;
-                margin-bottom: 15px;
-                padding: 12px;
                 max-width: 100%;
+                /* margin and padding come from the base rule + .visible modifier
+                   so the collapsed state stays truly zero-height. */
             }
 
             .precision-filters h4 {
@@ -960,6 +974,9 @@
                 shareBtn.disabled = true;
                 shareBtn.innerHTML = '<span class="share-icon">↗</span> Preparing…';
             }
+            // Hoisted so finally{} can always restore, even if canvas ops throw.
+            let mutated = false;
+            let originalLegendPosition;
             try {
 
             const sourceCanvas = document.getElementById('mainChart');
@@ -971,8 +988,8 @@
             // Force legend to bottom for the shared image. update() is synchronous,
             // so we can capture the canvas before the browser has a chance to paint
             // the mutated on-screen chart, then restore.
-            const originalLegendPosition = mainChart.options.plugins.legend.position;
-            const mutated = originalLegendPosition !== 'bottom';
+            originalLegendPosition = mainChart.options.plugins.legend.position;
+            mutated = originalLegendPosition !== 'bottom';
             if (mutated) {
                 mainChart.options.plugins.legend.position = 'bottom';
                 mainChart.update('none');
@@ -1017,14 +1034,10 @@
             ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
             ctx.fillText(`Shapiro (2026), JMCB  •  Federal Reserve Bank of San Francisco  •  Data through ${endDate}`, w / 2, titleHeight + h + 30);
 
-            // Snapshot the composite synchronously via toDataURL, then restore the
-            // on-screen chart before yielding to the event loop. This avoids the
-            // legend flash even on mobile.
+            // Snapshot the composite synchronously via toDataURL. The legend restore
+            // is handled in finally{} so it runs even if the browser blocks the
+            // canvas ops (e.g. tainted canvas SecurityError).
             const dataUrl = out.toDataURL('image/png');
-            if (mutated) {
-                mainChart.options.plugins.legend.position = originalLegendPosition;
-                mainChart.update('none');
-            }
 
             const blob = await (await fetch(dataUrl)).blob();
 
@@ -1054,6 +1067,10 @@
             a.click();
             URL.revokeObjectURL(url);
             } finally {
+                if (mutated && mainChart && originalLegendPosition !== undefined) {
+                    mainChart.options.plugins.legend.position = originalLegendPosition;
+                    mainChart.update('none');
+                }
                 if (shareBtn) {
                     shareBtn.disabled = false;
                     shareBtn.innerHTML = originalLabel;
@@ -1063,6 +1080,9 @@
         }
 
         function setDateRange(years) {
+            // Cancel any pending slider-debounced update so it can't fire after us
+            // and wipe the .active state we're about to set.
+            clearTimeout(sliderDebounceTimer);
             const frequency = document.querySelector('input[name="frequency"]:checked').value;
             const breakdown = document.getElementById('breakdown').value;
             const showAmbiguous = document.getElementById('showAmbiguous').checked;
@@ -1316,14 +1336,16 @@
         function updatePrecisionFiltersVisibility() {
             const breakdown = document.getElementById('breakdown').value;
             const mainFilters = document.getElementById('mainPrecisionFilters');
-            const wrapper = document.querySelector('#mainChart').parentElement;
+            const canvas = document.querySelector('#mainChart');
+            // Canvas is gone if the CSV load errored and .catch replaced the wrapper HTML.
+            const wrapper = canvas ? canvas.parentElement : null;
 
             if (breakdown === 'precision') {
-                mainFilters.classList.add('visible');
-                wrapper.classList.add('precision-mode');
+                if (mainFilters) mainFilters.classList.add('visible');
+                if (wrapper) wrapper.classList.add('precision-mode');
             } else {
-                mainFilters.classList.remove('visible');
-                wrapper.classList.remove('precision-mode');
+                if (mainFilters) mainFilters.classList.remove('visible');
+                if (wrapper) wrapper.classList.remove('precision-mode');
             }
         }
 
