@@ -1339,16 +1339,15 @@
             return data;
         }
 
-        // Load all CSV files with cache busting (refreshes every hour)
-        const now = new Date();
-        const cacheBuster = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}`;
+        // Fetch fresh data on every page load, including just after a monthly upload.
+        const cacheBuster = Date.now();
         Promise.all([
-            fetch(`supply_demand_baseline.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_quarterly.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_goods_services.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_goods_services_ambiguous.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_precision.csv?v=${cacheBuster}`).then(r => r.text()).then(parseCSV)
+            fetch(`supply_demand_baseline.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_ambiguous.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_quarterly.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_goods_services.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_goods_services_ambiguous.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
+            fetch(`supply_demand_precision.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV)
         ]).then(([baseline, ambiguous, quarterly, goodsServices, goodsServicesAmb, precision]) => {
             allData = {
                 'Baseline': baseline,
