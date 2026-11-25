@@ -1050,6 +1050,43 @@
     </footer>
 
     <script>
+        // Render from the selected data at a fixed size; never enlarge a phone screenshot.
+        function renderExportChart(liveChart) {
+            const copy = value => {
+                if (Array.isArray(value)) return value.map(copy);
+                if (value && Object.getPrototypeOf(value) === Object.prototype) {
+                    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, copy(item)]));
+                }
+                return value;
+            };
+            const canvas = document.createElement('canvas');
+            canvas.width = 1200;
+            canvas.height = 680;
+            const data = copy(liveChart.data);
+            data.datasets.forEach((dataset, index) => {
+                dataset.hidden = !liveChart.isDatasetVisible(index);
+            });
+            const options = copy(liveChart.config.options);
+            Object.assign(options, {
+                responsive: false, maintainAspectRatio: false,
+                animation: false, events: [], devicePixelRatio: 2
+            });
+            options.plugins.legend.position = 'bottom';
+            options.plugins.legend.labels = {
+                ...options.plugins.legend.labels,
+                font: { size: 16 }, boxWidth: 18, padding: 18
+            };
+            options.plugins.tooltip.enabled = false;
+            for (const scale of Object.values(options.scales)) {
+                if (!scale) continue;
+                scale.ticks = { ...scale.ticks, font: { size: 14 } };
+                if (scale.title) scale.title.font = { size: 16 };
+            }
+            return new Chart(canvas, {
+                type: liveChart.config.type, data, options
+            });
+        }
+
         let sharingChart = false;
         async function shareChart(action = 'share') {
             if (!mainChart || sharingChart) return;
@@ -1065,44 +1102,35 @@
                 shareBtn.disabled = true;
                 shareBtn.innerHTML = '<span class="share-icon">↗</span> Preparing…';
             }
-            // Hoisted so finally{} can always restore, even if canvas ops throw.
-            let mutated = false;
-            let originalLegendPosition;
+            let exportChart;
             try {
 
-            const sourceCanvas = document.getElementById('mainChart');
+            exportChart = renderExportChart(mainChart);
+            const sourceCanvas = exportChart.canvas;
+            const scale = 2;
             const title = document.getElementById('chartTitle').textContent;
 
             const startDate = document.getElementById('startDateInput').value;
             const endDate = document.getElementById('endDateInput').value;
 
-            // Force legend to bottom for the shared image. update() is synchronous,
-            // so we can capture the canvas before the browser has a chance to paint
-            // the mutated on-screen chart, then restore.
-            originalLegendPosition = mainChart.options.plugins.legend.position;
-            mutated = originalLegendPosition !== 'bottom';
-            if (mutated) {
-                mainChart.options.plugins.legend.position = 'bottom';
-                mainChart.update('none');
-            }
-
-            const w = sourceCanvas.width;
-            const h = sourceCanvas.height;
+            const w = sourceCanvas.width / scale;
+            const h = sourceCanvas.height / scale;
 
             // Build composite canvas: title + chart + footer
             const titleHeight = 72;
             const footerLines = w < 700
                 ? ['Shapiro (2026), JMCB', 'Federal Reserve Bank of San Francisco', `Data through ${endDate}`]
                 : [`Shapiro (2026), JMCB  •  Federal Reserve Bank of San Francisco  •  Data through ${endDate}`];
-            const footerFontSize = w < 700 ? 12 : 14;
+            const footerFontSize = 18;
             const footerLineHeight = Math.round(footerFontSize * 1.5);
             const footerHeight = footerLines.length * footerLineHeight + 20;
             const outH = h + titleHeight + footerHeight;
 
             const out = document.createElement('canvas');
-            out.width = w;
-            out.height = outH;
+            out.width = w * scale;
+            out.height = outH * scale;
             const ctx = out.getContext('2d');
+            ctx.scale(scale, scale);
 
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, w, outH);
@@ -1139,7 +1167,7 @@
             });
             ctx.textBaseline = 'alphabetic';
 
-            ctx.drawImage(sourceCanvas, 0, titleHeight);
+            ctx.drawImage(sourceCanvas, 0, titleHeight, w, h);
 
             ctx.fillStyle = '#666';
             ctx.font = `${footerFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
@@ -1147,16 +1175,8 @@
                 ctx.fillText(line, w / 2, titleHeight + h + 10 + (index + 1) * footerLineHeight);
             });
 
-            // Snapshot the composite synchronously via toDataURL. The legend restore
-            // is handled in finally{} so it runs even if the browser blocks the
-            // canvas ops (e.g. tainted canvas SecurityError).
+            // Snapshot the completed image before opening any share sheet.
             const dataUrl = out.toDataURL('image/png');
-
-            if (mutated) {
-                mainChart.options.plugins.legend.position = originalLegendPosition;
-                mainChart.update('none');
-                mutated = false;
-            }
 
             const blob = await (await fetch(dataUrl)).blob();
 
@@ -1191,10 +1211,7 @@
                 if (status) status.textContent = 'Unable to prepare the chart image. Please try again.';
                 console.error('Chart image export failed:', err);
             } finally {
-                if (mutated && mainChart && originalLegendPosition !== undefined) {
-                    mainChart.options.plugins.legend.position = originalLegendPosition;
-                    mainChart.update('none');
-                }
+                if (exportChart) exportChart.destroy();
                 buttons.forEach(button => { button.disabled = false; });
                 if (shareBtn) {
                     shareBtn.disabled = false;
