@@ -132,18 +132,38 @@
             header h1 { font-size: 21px; }
             .chart-wrapper { height: 320px; }
         }
+        .header-layout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 24px; align-items: start; }
+        .header-copy { min-width: 0; }
+        .data-downloads { display: flex; gap: 8px; flex-wrap: wrap; max-width: 310px; }
+        .download-caption { flex-basis: 100%; font-size: 12px; color: var(--muted); margin-bottom: 1px; }
+        .desktop-data-slot .download-btn { min-height: 40px; padding: 8px 12px; border: 1px solid var(--blue); border-radius: 5px; font-size: 13px; font-weight: 500; background: white; color: var(--blue); white-space: nowrap; }
+        .desktop-data-slot .download-btn:first-of-type { background: var(--blue); color: white; }
+        .mobile-data-slot { display: contents; }
+        @media (max-width: 768px) {
+            .header-layout { display: block; }
+            .desktop-data-slot { display: none; }
+            .data-downloads { display: contents; }
+            .download-caption { display: none; }
+            .chart-share-actions { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 6px; }
+            .chart-share-actions .share-chart-btn-prominent { min-width: 0; padding: 8px 4px; font-size: 12px; white-space: nowrap; }
+            .chart-share-actions .download-btn { min-width: 0; padding: 6px 0; font-size: 12px; white-space: nowrap; }
+        }
+        .ambiguous-help { margin-top: 4px; color: var(--muted); font-size: 13px; max-width: 72ch; }
+        .ambiguous-help summary { width: fit-content; cursor: pointer; }
+        .ambiguous-help p { padding: 6px 0 2px; line-height: 1.5; }
+        .data-refresh-status { flex-basis: 100%; font-size: 12px; color: var(--muted); }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
-            <h1>Supply and Demand Driven PCE Inflation</h1>
+<div class="header-layout"><div class="header-copy">            <h1>Supply and Demand Driven PCE Inflation</h1>
             <p>Supply, demand and ambiguous contributions to U.S. PCE inflation.</p>
             <div class="citation">Shapiro (2026), <i>Journal of Money, Credit and Banking</i> | <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/jmcb.13209">Published Article</a> | <a href="https://www.frbsf.org/wp-content/uploads/wp2022-18.pdf">Working Paper</a></div>
             <div class="data-status">
                 <time class="last-update" id="lastUpdated" hidden></time>
-                <div class="data-through" id="dataThroughBadge" style="display:none;"></div>
-            </div>
+                <div class="data-through" id="dataThroughBadge" style="display:none;"></div><span id="dataRefreshStatus" class="data-refresh-status" role="status" hidden></span>
+            </div></div><div id="desktopDataDownloads" class="desktop-data-slot"></div></div>
         </div>
     </header>
 
@@ -188,7 +208,7 @@
                     <label class="checkbox-row">
                         <input type="checkbox" id="showAmbiguous" checked>
                         <span>Model with ambiguous category</span>
-                    </label>
+                    </label><details class="ambiguous-help"><summary>About this option</summary><p>Categories with weak price or quantity signals are grouped as ambiguous. Turning this off uses the baseline classification for the supply and demand contributions.</p></details>
                 </div>
 
 
@@ -243,8 +263,8 @@
                             <span class="share-icon" aria-hidden="true">↗</span> Share This Chart
                         </button>
                         <button id="save-chart-image-btn" type="button" class="share-chart-btn-prominent save-chart-btn" onclick="shareChart('download')">Save PNG</button>
-                <button class="download-btn" onclick="downloadFullDataset()">All data (Excel)</button>
-                <button class="download-btn" onclick="downloadViewCSV()">Chart data (CSV)</button>
+<div id="mobileDataDownloads" class="mobile-data-slot"><div id="dataDownloads" class="data-downloads" role="group" aria-label="Download data"><span class="download-caption">Download data</span>                <button class="download-btn" onclick="downloadFullDataset()">All data (Excel)</button>
+                <button class="download-btn" onclick="downloadViewCSV()">Chart data (CSV)</button></div></div>
                     </div>
                     <p id="chart-share-status" class="chart-share-status" role="status"></p>
                 </div>
@@ -259,6 +279,58 @@
     </footer>
 
     <script>
+        // Every deployment publishes data under content-versioned URLs. Only the
+        // small manifest is polled; CSVs are fetched again when the release changes.
+        const RELEASE_FILES = ['supply_demand_baseline.csv', 'supply_demand_ambiguous.csv', 'supply_demand_quarterly.csv', 'supply_demand_goods_services.csv', 'supply_demand_goods_services_ambiguous.csv', 'supply_demand_precision.csv', 'supply_demand_public.xlsx', 'data-update.json'];
+        let activeDataRelease = null;
+        let refreshInProgress = false;
+        let lastDataCheck = 0;
+        let lastLoadedCsvText = '';
+
+        async function readPublishedDataRelease() {
+            const response = await fetch(`data-manifest.json?v=${Date.now()}`, {cache: 'no-store'});
+            if (response.status === 404) return null; // Unpackaged local previews.
+            if (!response.ok) throw new Error('Data release check failed.');
+            const release = await response.json();
+            if (!/^[a-f0-9]{64}$/.test(release.version) || !Number.isFinite(Date.parse(release.published_at)) || !release.files) throw new Error('Invalid data release.');
+            for (const name of RELEASE_FILES) {
+                if (release.files[name] !== `data/${release.version}/${name}`) throw new Error('Incomplete data release.');
+            }
+            return release;
+        }
+
+        function dataFileUrl(name, release = activeDataRelease) {
+            return release ? release.files[name] : `${name}?v=${Date.now()}`;
+        }
+
+        async function latestDataFileUrl(name) {
+            try {
+                const release = await readPublishedDataRelease();
+                if (release && (!activeDataRelease || Date.parse(release.published_at) >= Date.parse(activeDataRelease.published_at))) return dataFileUrl(name, release);
+                return dataFileUrl(name);
+            } catch { return `${name}?v=${Date.now()}`; }
+        }
+
+        async function fetchDataText(name, release) {
+            const response = await fetch(dataFileUrl(name, release), {cache: 'no-store'});
+            if (!response.ok) throw new Error(`Unable to load ${name}.`);
+            return response.text();
+        }
+
+        function setRefreshWarning(message = '') {
+            const element = document.getElementById('dataRefreshStatus');
+            if (element) { element.textContent = message; element.hidden = !message; }
+        }
+
+        function startDataRefresh(refresh) {
+            const check = () => { if (document.visibilityState === 'visible') refresh(); };
+            setInterval(check, 60_000);
+            document.addEventListener('visibilitychange', check);
+            window.addEventListener('focus', check);
+            window.addEventListener('online', check);
+            window.addEventListener('pageshow', event => { if (event.persisted) check(); });
+        }
+
         // Render from the selected data at a fixed size; never enlarge a phone screenshot.
         function renderExportChart(liveChart) {
             const copy = value => {
@@ -490,10 +562,13 @@
             wasMobile = mobile;
             document.getElementById('controlsPanel').classList.toggle('collapsed', mobile);
             document.getElementById('mobileToggle').setAttribute('aria-expanded', String(!mobile));
+            const target = document.getElementById(mobile ? 'mobileDataDownloads' : 'desktopDataDownloads');
+            target.appendChild(document.getElementById('dataDownloads'));
         }
 
         // Run on load and resize
         window.addEventListener('load', checkScreenSize);
+        checkScreenSize();
         window.addEventListener('resize', checkScreenSize);
 
         let allData = {};
@@ -556,7 +631,7 @@
             if (!baseline.length) return;
             const latest = baseline[baseline.length - 1].date.slice(0, 7);
             try {
-                const response = await fetch(`data-update.json?v=${Date.now()}`, { cache: 'no-store' });
+                const response = await fetch(dataFileUrl('data-update.json'), { cache: 'no-store' });
                 if (!response.ok) return;
                 const metadata = await response.json();
                 if (metadata.data_through !== latest || !/^\d{4}-\d{2}-\d{2}$/.test(metadata.bea_release_date)) return;
@@ -572,43 +647,69 @@
             }
         }
 
-        // Fetch fresh data on every page load, including just after a monthly upload.
-        const cacheBuster = Date.now();
-        Promise.all([
-            fetch(`supply_demand_baseline.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_ambiguous.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_quarterly.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_goods_services.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_goods_services_ambiguous.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV),
-            fetch(`supply_demand_precision.csv?v=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(parseCSV)
-        ]).then(([baseline, ambiguous, quarterly, goodsServices, goodsServicesAmb, precision]) => {
-            allData = {
-                'Baseline': baseline,
-                'Ambiguous': ambiguous,
-                'Quarterly': quarterly,
-                'Goods_Services': goodsServices,
-                'Goods_Services_Ambiguous': goodsServicesAmb,
-                'Precision': precision
-            };
-            // Populate the "Data through" badge from the newest baseline row.
-            const badge = document.getElementById('dataThroughBadge');
-            if (badge && baseline.length) {
-                const last = baseline[baseline.length - 1].date;
-                const d = new Date(last);
-                badge.textContent = `Data through ${MONTH_NAMES[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+        // Fetch fresh data on page load and when a newer published snapshot appears.
+        async function loadData(force = false) {
+            if (refreshInProgress || sharingChart || (!force && document.visibilityState === 'hidden')) return;
+            if (!force && Date.now() - lastDataCheck < 10_000) return;
+            refreshInProgress = true;
+            lastDataCheck = Date.now();
+            const initial = !allData.Baseline?.length;
+            try {
+                const release = await readPublishedDataRelease();
+                if (release && activeDataRelease && Date.parse(release.published_at) < Date.parse(activeDataRelease.published_at)) { setRefreshWarning(); return; }
+                if (release && activeDataRelease?.version === release.version) { setRefreshWarning(); return; }
+                const names = RELEASE_FILES.filter(name => name.endsWith('.csv'));
+                const texts = await Promise.all(names.map(name => fetchDataText(name, release)));
+                const signature = texts.join('\n---FILE---\n');
+                if (!initial && signature === lastLoadedCsvText) {
+                    activeDataRelease = release;
+                    await updateDataStatus(allData.Baseline);
+                    setRefreshWarning();
+                    return;
+                }
+                const keys = ['Baseline', 'Ambiguous', 'Quarterly', 'Goods_Services', 'Goods_Services_Ambiguous', 'Precision'];
+                const candidate = Object.fromEntries(texts.map((text, i) => [keys[i], parseCSV(text)]));
+                for (const rows of Object.values(candidate)) {
+                    if (!rows.length || rows.some((row, i) => typeof row.date !== 'string' || !/^\d{4}-\d{2}/.test(row.date) || (i && row.date <= rows[i - 1].date))) throw new Error('Invalid data dates.');
+                    if (Object.entries(rows.at(-1)).some(([key, value]) => key !== 'date' && !Number.isFinite(value))) throw new Error('Incomplete latest data.');
+                }
+                const baseline = candidate.Baseline;
+                if (!initial && baseline.at(-1).date < allData.Baseline.at(-1).date) throw new Error('An older release was returned.');
+                const confirmation = release ? await readPublishedDataRelease() : null;
+                if (release && confirmation?.version !== release.version) throw new Error('The release changed while loading.');
+                if (sharingChart) return;
+
+                const frequency = document.querySelector('input[name="frequency"]:checked').value;
+                const breakdown = document.getElementById('breakdown').value;
+                const ambiguous = document.getElementById('showAmbiguous').checked;
+                const previousSheet = getSheetData(frequency, breakdown, ambiguous);
+                const endInput = document.getElementById('endDateInput');
+                const wasAtLatest = initial || endInput.value >= (previousSheet.at(-1)?.date.slice(0, 7) || '');
+                const presetAction = document.querySelector('.preset-chips button.active')?.getAttribute('onclick');
+                const presetMatch = /^setDateRange\((\d+|'all')\)$/.exec(presetAction || '');
+                const preset = presetMatch ? presetMatch[1] === "'all'" ? 'all' : Number(presetMatch[1]) : null;
+                allData = candidate;
+                activeDataRelease = release;
+                lastLoadedCsvText = signature;
+                if (!initial && wasAtLatest) endInput.value = baseline.at(-1).date.slice(0, 7);
+                const badge = document.getElementById('dataThroughBadge');
+                const date = new Date(baseline.at(-1).date);
+                badge.textContent = `Data through ${date.toLocaleDateString('en-US', {month: 'long', year: 'numeric', timeZone: 'UTC'})}`;
                 badge.style.display = 'inline-block';
-            }
-            updateCharts();
-            updateDataStatus(baseline);
-        }).catch(error => {
-            console.error('Error loading data:', error);
-            document.querySelectorAll('.chart-wrapper').forEach(el => {
-                el.innerHTML = '<div style="padding:20px;text-align:center;color:#666;line-height:1.5;">' +
-                    'Unable to load data. Please check your connection and ' +
-                    '<button onclick="location.reload()" style="text-decoration:underline;background:none;border:none;color:#4A7BA7;cursor:pointer;font:inherit;padding:0;">refresh the page</button>.' +
-                    '</div>';
-            });
-        });
+                updateCharts('none');
+                if (preset !== null && wasAtLatest) setDateRange(preset);
+                await updateDataStatus(baseline);
+                setRefreshWarning();
+            } catch (error) {
+                console.warn('Data update check failed; retrying automatically.', error);
+                if (initial) {
+                    const loading = document.getElementById('chartLoading');
+                    if (loading) loading.textContent = 'Unable to load data. Retrying automatically.';
+                } else setRefreshWarning('Could not check for updates. Retrying automatically.');
+            } finally { refreshInProgress = false; }
+        }
+        loadData(true);
+        startDataRefresh(() => loadData());
 
         // Initialize quarterly availability and precision filters on load
         updateQuarterlyAvailability();
@@ -699,7 +800,8 @@
             } else {
                 quarterlyRadio.disabled = true;
                 quarterlyNote.textContent = '(baseline only)';
-                showAmbiguousCheckbox.style.display = 'block';
+                // Precision views already classify weak signals using their confidence filters.
+                showAmbiguousCheckbox.style.display = breakdown === 'precision' ? 'none' : 'block';
 
                 // If quarterly is currently selected, switch to yearly
                 if (frequency === 'quarterly') {
@@ -1084,9 +1186,9 @@
             });
         }
 
-        function downloadFullDataset() {
+        async function downloadFullDataset() {
             // Download the full Excel file from GitHub
-            const url = 'supply_demand_public.xlsx';
+            const url = await latestDataFileUrl('supply_demand_public.xlsx');
             const a = document.createElement('a');
             a.href = url;
             a.download = 'supply_demand_public.xlsx';

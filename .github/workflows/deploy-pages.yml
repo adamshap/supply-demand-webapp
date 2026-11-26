@@ -19,12 +19,13 @@ jobs:
         with:
           ref: main
       - uses: actions/configure-pages@v6
-      - name: Stage public dashboard files
+      - name: Check refresh, release dates and snapshot packaging
         run: |
-          mkdir _site
-          cp supply_demand_webapp.html supply_demand_*.csv supply_demand_public.xlsx data-update.json preview.png _site/
-          cp supply_demand_webapp.html _site/index.html
-          touch _site/.nojekyll
+          node automation/tests/test_data_refresh.js
+          node automation/tests/test_dashboard_status.js
+          python -m unittest discover -s automation/tests -p test_package_site.py
+      - name: Stage public dashboard files
+        run: python automation/package_site.py --output _site
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site

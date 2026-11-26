@@ -5,7 +5,7 @@ assert.ok(match);
 async function check(metadata) {
  const element={hidden:true,textContent:''};
  await vm.runInNewContext(`(async()=>{${match[0]};await updateDataStatus([{date:'2026-10-01T12:00:00Z'}]);})()`,{
-  document:{getElementById:()=>element},fetch:async()=>({ok:true,json:async()=>metadata}),Date,console
+  document:{getElementById:()=>element},fetch:async()=>({ok:true,json:async()=>metadata}),Date,console,dataFileUrl:name=>name
  });return element;
 }
 (async()=>{

@@ -63,6 +63,7 @@ jobs:
         run: |
           python -m unittest discover -s automation/tests -v
           node automation/tests/test_dashboard_status.js
+          node automation/tests/test_data_refresh.js
       - name: Download, calculate and validate
         if: steps.calendar.outputs.run_update == 'true'
         id: update

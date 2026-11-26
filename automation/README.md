@@ -47,3 +47,13 @@ GitHub Pages uses an explicit Actions deployment after a data commit, because a 
 ## Source scripts checked
 
 create_benchmark_sd.do; update_monthly_sd.do; main_construct.do; main_construct_goodsserv.do; main_publicdata.do, in Adam's supplied JMCB Programs folder. audited-source-hashes.json records their hashes. Only the two constructors received the shared numerical-zero correction, with original-byte backups; runner routing and the exporter are unchanged. The old runner scripts have unbounded flag-wait loops; this replacement instead has a bounded GitHub job timeout and never publishes a failed partial run.
+
+## Freshness after uploads
+
+Pages deployment now packages the CSVs, Excel workbook and release metadata as one content-versioned snapshot. The dashboard first checks `data-manifest.json`, then loads files from that snapshot's unique URLs. New uploads and same-month revisions therefore get new file URLs rather than reusing a cached CSV or workbook. Existing root filenames remain available for external links.
+
+An open dashboard checks the small manifest once per minute while visible, when returning to the tab, after browser back/forward restoration, and after reconnecting. It downloads data again only when a new snapshot appears. It preserves the selected series, decomposition and date range, rolls a selected trailing preset forward, and leaves an explicitly historical window in place. Failed, incomplete or older snapshots do not replace the loaded release; checks retry automatically. Excel downloads recheck the current snapshot when clicked.
+
+A new upload still needs its GitHub Pages deployment to finish. The site cannot show an upload before GitHub has published it. The displayed Last updated remains the BEA release date, not the time of a background check.
+
+`node automation/tests/test_data_refresh.js` checks new months, same-month revisions, preserved selections, versioned Excel links, failed/older-release protection and refresh triggers. `python -m unittest discover -s automation/tests -p test_package_site.py` checks immutable snapshot paths and byte preservation. These run during Pages publishing as well as the release-update checks.
