@@ -91,6 +91,12 @@ def run(root, mode, full_history, cached_inputs, output, expected_month=None, re
     previous_excel = read_frames(root / 'supply_demand_public.xlsx', schema)
     latest_number = month_number(previous['supply_demand_baseline.csv'].date.iloc[-1])
     previous_month = str(pd.Period('1960-01', 'M') + latest_number)
+    try:
+        metadata = json.loads((root / 'data-update.json').read_text())
+        metadata_current = (metadata['data_through'] == previous_month
+                            and datetime.strptime(metadata['bea_release_date'], '%Y-%m-%d').date().isoformat() == metadata['bea_release_date'])
+    except (OSError, ValueError, KeyError, TypeError):
+        metadata_current = False
     state_path = root / 'automation/state.json'
     state = json.loads(state_path.read_text()) if state_path.exists() else {}
     baseline_changed = hashes != state.get('published_files_sha256')
@@ -120,7 +126,7 @@ def run(root, mode, full_history, cached_inputs, output, expected_month=None, re
         if available < previous_month:
             raise ValueError('BEA is serving an older release; no files were changed')
         probe_hash = fingerprint(probe)
-        if (mode == 'update' and not full_history and not baseline_changed
+        if (mode == 'update' and not full_history and not baseline_changed and metadata_current
                 and state.get('model_version') == MODEL_VERSION
                 and probe_hash == state.get('probe_sha256') and available == previous_month):
             return dict(status='unchanged', latest_month=previous_month, changed=False, data_changed=False)
@@ -155,6 +161,8 @@ def run(root, mode, full_history, cached_inputs, output, expected_month=None, re
         differences = sum(int((abs(overlap[c + '_old'] - overlap[c + '_new']) > 1e-6).sum()) for c in old.columns[1:])
         comparisons.append(dict(file=file, rows=len(new), overlap_cells=len(overlap) * (len(old.columns) - 1),
                                 differences_over_1e_6=differences))
+    # An already-uploaded CSV month can still need its release metadata updated.
+    data_changed |= not metadata_current
     report = dict(status='validated' if mode == 'validate' else 'updated', latest_month=latest,
                   source='BEA NIUnderlyingDetail U20404, U20405 and U20403', full_history=full,
                   comparisons=comparisons, inputs_sha256=fingerprint(panel), model_version=MODEL_VERSION,

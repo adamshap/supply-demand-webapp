@@ -101,6 +101,22 @@ class PipelineTests(unittest.TestCase):
                 self.assertEqual(list(actual.date),list(expected.date))
                 np.testing.assert_allclose(actual.drop(columns='date'),expected.drop(columns='date'),atol=1e-6,rtol=0,equal_nan=True)
 
+    def test_already_uploaded_month_gets_current_release_metadata(self):
+        import shutil,gzip
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);(root/'automation').mkdir()
+            for name in ['categories.csv','schema.json']:shutil.copyfile(ROOT/'automation'/name,root/'automation'/name)
+            (root/'automation/state.json').write_text('{}')
+            for name in FILES:(root/name).write_bytes(gzip.decompress((FIX/(name+'.gz')).read_bytes()))
+            shutil.copyfile(FIX/'supply_demand_public.xlsx',root/'supply_demand_public.xlsx')
+            (root/'data-update.json').write_text(json.dumps({'data_through':'2026-09','bea_release_date':'2026-10-29'}))
+            with patch('update.BeaClient'),patch('update.inputs',return_value=self.panel),patch('update.candidates',return_value=(self.csvs,self.excels)):
+                report=run(root,'update',False,None,root/'out','2026-10','2026-11-25T13:30:00+00:00')
+            self.assertTrue(report['data_changed'])
+            metadata=json.loads((root/'data-update.json').read_text())
+            self.assertEqual(metadata['data_through'],'2026-10')
+            self.assertEqual(metadata['bea_release_date'],'2026-11-25')
+
     def test_waiting_release_and_network_failure_preserve_files(self):
         paths=[ROOT/name for name in PUBLIC_FILES]+[ROOT/'automation/state.json',ROOT/'data-update.json']
         before=[p.read_bytes() for p in paths]

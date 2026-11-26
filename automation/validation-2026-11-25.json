@@ -1,0 +1,15 @@
+{
+  "data_through": "2026-10",
+  "bea_haver_input_series": 393,
+  "bea_haver_months": 814,
+  "bea_haver_max_absolute_difference": 0.0,
+  "bea_haver_missingness_identical": true,
+  "csv_cells_compared": 76808,
+  "excel_sheets_compared": 6,
+  "numerical_tolerance_percentage_points": 1e-06,
+  "historical_near_zero_compatibility_cases": 16,
+  "hosted_full_rebuild_run": "https://github.com/adamshap/supply-demand-webapp/actions/runs/45756714421",
+  "hosted_calendar_skip_run": "https://github.com/adamshap/supply-demand-webapp/actions/runs/45757218698",
+  "hosted_unchanged_release_run": "https://github.com/adamshap/supply-demand-webapp/actions/runs/45757222079",
+  "shared_research_files_modified": false
+}
