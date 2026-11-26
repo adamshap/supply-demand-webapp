@@ -1,8 +1,14 @@
 name: Update supply/demand from BEA
 on:
   schedule:
-    # Lightweight calendar checks; data downloads run only for a due release.
-    - cron: '57 12,13,17,21 * * *'
+    # Eastern time, including DST. Retry every 10 minutes for the first hour,
+    # then hourly; the official release calendar skips completed/not-due data.
+    - cron: '34,44,54 8 * * *'
+      timezone: 'America/New_York'
+    - cron: '4,14,24 9 * * *'
+      timezone: 'America/New_York'
+    - cron: '34 0-7,9-23 * * *'
+      timezone: 'America/New_York'
   workflow_dispatch:
     inputs:
       mode:

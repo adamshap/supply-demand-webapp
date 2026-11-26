@@ -48,11 +48,18 @@ class CalendarTests(unittest.TestCase):
         self.assertEqual(self.releases[3].month,'2026-10')
 
     def test_wait_until_after_release_then_retry_until_published(self):
-        self.assertFalse(decide(self.releases,'2026-09',utc('2026-11-25T13:44'))['run_update'])
-        result=decide(self.releases,'2026-09',utc('2026-11-25T13:47'))
+        self.assertFalse(decide(self.releases,'2026-09',utc('2026-11-25T13:30:59'))['run_update'])
+        result=decide(self.releases,'2026-09',utc('2026-11-25T13:31'))
         self.assertTrue(result['run_update']); self.assertEqual(result['expected_month'],'2026-10')
         self.assertTrue(decide(self.releases,'2026-09',utc('2026-11-28T21:47'))['run_update'])
         self.assertFalse(decide(self.releases,'2026-10',utc('2026-11-28T21:47'))['run_update'])
+
+    def test_first_minute_after_summer_release(self):
+        self.assertFalse(decide(self.releases,'2026-06',utc('2026-08-26T12:30:59'))['run_update'])
+        result=decide(self.releases,'2026-06',utc('2026-08-26T12:31'))
+        self.assertTrue(result['run_update'])
+        self.assertEqual(result['expected_month'],'2026-07')
+        self.assertFalse(decide(self.releases,'2026-07',utc('2026-08-26T12:41'))['run_update'])
 
     def test_rescheduled_release_and_year_rollover(self):
         moved=parse_calendar(CALENDAR.replace('20261125T133000Z','20261127T150000Z'))

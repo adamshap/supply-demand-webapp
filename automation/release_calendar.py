@@ -66,7 +66,7 @@ def decide(releases: list[Release], latest: str, now: datetime) -> dict:
         raise ValueError('Invalid dashboard reference month')
     if releases[-1].at < now - timedelta(days=45):
         raise ValueError('BEA calendar is stale; refusing to guess the next release date')
-    due = [release for release in releases if release.at + timedelta(minutes=15) <= now]
+    due = [release for release in releases if release.at + timedelta(minutes=1) <= now]
     if not due:
         return {'run_update': False, 'expected_month': '', 'reason': 'before_first_release'}
     # Using the maximum due reference month also handles delayed combined releases.

@@ -4,7 +4,7 @@ The pipeline runs on GitHub Actions using public BEA data. It does not run Stata
 
 ## Timing and retries
 
-The official Personal Income and Outlays iCalendar feed supplies the release date, time and reference month: https://www.bea.gov/news/schedule/ics/online-calendar-subscription.ics . Lightweight calendar checks run at 12:57, 13:57, 17:57 and 21:57 UTC daily. The first data check is normally around 8:57 a.m. Eastern on release morning, in winter and summer. The ten-minute offset from ISMI reduces contention on the shared BEA API key. GitHub can delay a scheduled start.
+The official Personal Income and Outlays iCalendar feed supplies the release date, time and reference month: https://www.bea.gov/news/schedule/ics/online-calendar-subscription.ics . Eastern-time checks start at 8:34 a.m. on release morning, retry every ten minutes through 9:24 a.m., then hourly at :34 (9:34, 10:34, and so on), including overnight and weekends until the expected release is published. America/New_York scheduling handles daylight saving changes automatically. The three-minute offset from ISMI reduces contention on the shared BEA API key. The calendar permits a due release one minute after official publication, replacing the former fifteen-minute buffer. GitHub can delay a scheduled start.
 
 No BEA data tables are downloaded when the scheduled reference month is already published or the next release is not due. When a due release is missing or incomplete in the API, published files remain untouched and the next check retries, including weekends. Changed or postponed calendar dates are read automatically. Calendar failures fail closed; stale calendars are flagged instead of guessed. Manual Actions runs bypass the calendar unless follow_calendar is selected.
 
