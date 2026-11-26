@@ -31,901 +31,106 @@
     <script data-goatcounter="https://supplydemand.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #ffffff;
-            color: #1f2937;
-            line-height: 1.6;
-        }
-
-        /* Visible focus ring for keyboard users across all interactive controls.
-           :focus-visible only shows on keyboard nav, not mouse clicks. */
-        .download-btn:focus-visible,
-        .share-chart-btn-prominent:focus-visible,
-        .preset-chips button:focus-visible,
-        .mobile-toggle:focus-visible,
-        .radio-group input:focus-visible,
-        .precision-filters input:focus-visible,
-        .checkbox-row input:focus-visible {
-            outline: 2px solid #005A93;
-            outline-offset: 2px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background: #ffffff;
-            color: #1f2937;
-            padding: 32px 20px 24px;
-            margin-bottom: 30px;
-            border-bottom: 4px solid #4A7BA7;
-        }
-
-        header h1 {
-            font-size: 2em;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #1f2937;
-            letter-spacing: -0.3px;
-        }
-
-        header p {
-            font-size: 1.05em;
-            color: #4b5563;
-            margin-bottom: 6px;
-        }
-
-        .citation {
-            font-size: 0.9em;
-            color: #6b7280;
-            margin-top: 10px;
-        }
-
-        .citation a {
-            color: #4A7BA7;
-            text-decoration: none;
-            border-bottom: 1px solid rgba(74, 123, 167, 0.35);
-            transition: border-color 0.15s;
-        }
-
-        .citation a:hover {
-            border-bottom-color: #4A7BA7;
-        }
-
-        .data-through {
-            display: inline-block;
-            margin-top: 12px;
-            padding: 4px 10px;
-            background: #eef4fa;
-            color: #4A7BA7;
-            border-radius: 6px;
-            font-size: 0.82em;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-        }
-
-        .last-update {
-            display: inline-block;
-            margin: 12px 0 0 12px;
-            color: #6b7280;
-            font-size: 0.82em;
-        }
+        :root { --blue: #4a7ba7; --ink: #233342; --muted: #647180; --line: #e3e9ef; --wash: #f6f8fa; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: white; color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        button, input, select { font: inherit; }
+        button, select, summary { cursor: pointer; }
+        button { -webkit-tap-highlight-color: transparent; }
+        button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid #005a93; outline-offset: 3px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 18px 28px; }
+        header .container { padding-top: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+        header h1 { font-size: clamp(24px, 2.5vw, 32px); font-weight: 600; line-height: 1.22; letter-spacing: -.6px; margin-bottom: 8px; }
+        header p { color: var(--muted); font-size: 15px; line-height: 1.5; }
+        .citation { margin-top: 8px; font-size: 13px; color: var(--muted); }
+        .citation a { color: var(--blue); text-decoration: none; border-bottom: 1px solid #bed0df; }
+        .data-status { display: flex; flex-wrap: wrap; gap: 2px 16px; margin-top: 7px; color: var(--muted); font-size: 13px; }
         .last-update[hidden] { display: none; }
-        @media (max-width: 600px) {
-            .last-update { display: block; margin: 4px 0 0; }
-        }
-
-        .main-content {
-            display: flex;
-            gap: 30px;
-        }
-
-        .controls {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.06);
-            width: 240px;
-            flex-shrink: 0;
-            height: fit-content;
-        }
-
-        .control-group {
-            margin-bottom: 25px;
-        }
-
-        .control-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #4A7BA7;
-            font-size: 0.95em;
-        }
-
-        /* Group heading (e.g. "Inflation Series:") — quiet uppercase so the chart,
-           not the control panel, is the visual hero. Scoped to a class so the
-           radio/checkbox option labels below keep their normal styling. */
-        .control-group > .group-heading {
-            color: #6b7280;
-            font-size: 0.72em;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-
-        .control-group select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 1em;
-            background-color: white;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        .control-group select:hover {
-            border-color: #4A7BA7;
-        }
-
-        .control-group select:focus {
-            outline: none;
-            border-color: #005A93;
-            box-shadow: 0 0 0 3px rgba(0, 58, 99, 0.1);
-        }
-
-        .radio-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            font-weight: normal;
-            color: #333;
-            cursor: pointer;
-            transition: color 0.15s;
-        }
-
-        @media (hover: hover) {
-            .radio-group label:hover,
-            .precision-filters label:hover,
-            .checkbox-row:hover {
-                color: #4A7BA7;
-            }
-        }
-
-        .radio-group input[type="radio"] {
-            margin-right: 8px;
-            cursor: pointer;
-        }
-
-        .checkbox-row {
-            display: flex;
-            align-items: center;
-            font-weight: normal;
-            color: #333;
-            cursor: pointer;
-            transition: color 0.15s;
-        }
-
-        .checkbox-row input[type="checkbox"] {
-            margin-right: 8px;
-            cursor: pointer;
-        }
-
-        /* Desktop range sliders — styled to match brand. Mobile query below
-           bumps the thumb/track for touch targets. */
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 6px;
-            background: #e5e7eb;
-            border-radius: 3px;
-            outline: none;
-            margin: 6px 0;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #4A7BA7;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #4A7BA7;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            cursor: pointer;
-        }
-
-        /* Firefox paints its own default track over the input background when
-           appearance is reset; explicit rule keeps track flat and matches Chrome. */
-        input[type="range"]::-moz-range-track {
-            background: #e5e7eb;
-            height: 6px;
-            border-radius: 3px;
-            border: none;
-        }
-
-        input[type="range"]:hover::-webkit-slider-thumb {
-            transform: scale(1.1);
-        }
-
-        input[type="range"]:focus {
-            outline: none;
-        }
-
-        input[type="range"]:focus::-webkit-slider-thumb {
-            box-shadow: 0 0 0 4px rgba(74, 123, 167, 0.2);
-        }
-
-        input[type="range"]:focus::-moz-range-thumb {
-            box-shadow: 0 0 0 4px rgba(74, 123, 167, 0.2);
-        }
-
-        .date-inputs {
-            display: flex;
-            gap: 10px;
-        }
-
-        .date-inputs input {
-            flex: 1;
-            padding: 8px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.9em;
-        }
-
-        .month-input {
-            flex: 1;
-            font-size: 0.85em;
-            padding: 4px 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            transition: border-color 0.15s, box-shadow 0.15s;
-        }
-
-        .month-input:focus {
-            outline: none;
-            border-color: #4A7BA7;
-            box-shadow: 0 0 0 3px rgba(74, 123, 167, 0.15);
-        }
-
-        .charts {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-        }
-
-        .chart-container {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.06);
-            position: relative;
-        }
-
-        .chart-header {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .chart-container h2 {
-            font-size: 1.4em;
-            margin-bottom: 0;
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .chart-wrapper {
-            position: relative;
-            height: 500px;
-        }
-
-        .chart-loading {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6b7280;
-            font-size: 0.95em;
-            gap: 10px;
-        }
-
-        .chart-loading::before {
-            content: '';
-            width: 16px;
-            height: 16px;
-            border: 2px solid #e5e7eb;
-            border-top-color: #4A7BA7;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .chart-loading.hidden {
-            display: none;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .precision-filters {
-            position: relative;
-            background: #f8f9fa;
-            border: 1px solid rgba(74, 123, 167, 0.35);
-            border-left: 3px solid #4A7BA7;
-            border-radius: 6px;
-            padding: 0 12px;
-            margin-top: 0;
-            margin-bottom: 0;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            /* Margins are zero when collapsed and expand with the box; otherwise
-               they leave a ~30px empty gap above the chart when breakdown is not "precision". */
-            transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease,
-                        margin-top 0.3s ease, margin-bottom 0.3s ease;
-        }
-
-        .precision-filters.visible {
-            max-height: 500px;
-            opacity: 1;
-            padding: 12px;
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-
-        .precision-filters h4 {
-            margin: 0 15px 0 0;
-            font-size: 0.9em;
-            color: #4A7BA7;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .precision-explainer {
-            margin: 0 0 10px 0;
-            font-size: 0.85em;
-            color: #4b5563;
-            line-height: 1.5;
-        }
-
-        .precision-explainer em {
-            font-style: italic;
-            color: #1f2937;
-        }
-
-        .precision-filters-group {
-            display: inline-flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .precision-filters label {
-            display: flex;
-            align-items: center;
-            font-size: 0.85em;
-            cursor: pointer;
-            color: #333;
-            white-space: nowrap;
-        }
-
-        .precision-filters input[type="radio"] {
-            margin-right: 6px;
-            cursor: pointer;
-        }
-
-        .download-btn {
-            background-color: white;
-            color: #4A7BA7;
-            border: 1px solid #4A7BA7;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin-top: 15px;
-            transition: background-color 0.2s, color 0.2s;
-        }
-
-        .chart-share-actions {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 16px;
-        }
-
-        .chart-share-actions .share-chart-btn-prominent {
-            margin: 0;
-            width: auto;
-            min-height: 44px;
-        }
-
-        .chart-share-status {
-            margin: 8px 0 0;
-            text-align: center;
-            color: #6b7280;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
+        .main-content, .charts { min-width: 0; }
+        .controls { width: 100%; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+        .controls-content { display: grid; grid-template-columns: 1fr 1.4fr .85fr; align-items: start; gap: 12px 24px; }
+        .control-group { min-width: 0; }
+        .group-heading { display: block; color: var(--muted); font-size: 13px; font-weight: 400; margin-bottom: 6px; }
+        .radio-group { display: flex; flex-wrap: wrap; gap: 4px 14px; min-height: 40px; align-items: center; }
+        .radio-group label, .checkbox-row { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; line-height: 1.4; }
+        input[type="radio"], input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--blue); cursor: pointer; }
+        .radio-group label:has(input:disabled) { color: #8c97a2; }
+        select { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); background: white; border-radius: 5px; color: var(--ink); font-size: 14px; }
+        .ambiguous-option { grid-column: 1 / -1; }
+        .checkbox-row { min-height: 28px; }
+        .mobile-toggle { display: none; }
+        .chart-container { min-width: 0; }
+        .chart-header { margin-bottom: 10px; }
+        .chart-heading { font-size: 16px; font-weight: 600; line-height: 1.4; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        .date-range-group { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 10px; }
+        .date-range-group > .group-heading { margin: 0; font-size: 12px; }
+        .preset-chips { display: flex; gap: 3px; }
+        .preset-chips button { background: white; border: 0; border-radius: 5px; min-width: 44px; min-height: 38px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+        .preset-chips button.active { background: #eaf1f8; color: var(--blue); font-weight: 600; }
+        .preset-chips button:hover { background: var(--wash); }
+        .custom-date-range { margin-left: auto; color: var(--muted); font-size: 13px; }
+        .custom-date-range summary { padding: 8px 0; }
+        .custom-date-range[open] { width: 100%; margin: 0; }
+        .custom-date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 8px 0; }
+        .month-input { min-height: 38px; padding: 5px 8px; width: 100%; border: 1px solid var(--line); border-radius: 5px; background: white; color: var(--ink); font-size: 14px; }
+        input[type="range"] { width: 100%; height: 4px; accent-color: var(--blue); cursor: pointer; }
+        .chart-wrapper { position: relative; width: 100%; height: 440px; }
+        .chart-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
+        .chart-loading.hidden { display: none; }
+        .precision-filters { display: none; }
+        .precision-filters.visible { display: block; padding: 12px; margin: 12px 0; background: var(--wash); border-radius: 6px; }
+        .precision-explainer { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+        .precision-filters h4 { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+        .precision-filters-group { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+        .precision-filters-group label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+        .chart-share-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; }
+        .share-chart-btn-prominent { min-height: 40px; padding: 8px 14px; border: 1px solid var(--blue); background: var(--blue); color: white; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .share-chart-btn-prominent.save-chart-btn { background: white; color: var(--blue); }
+        .share-chart-btn-prominent:disabled { opacity: .65; cursor: wait; }
+        .share-icon { display: none; }
+        .download-btn { min-height: 40px; padding: 6px 0; border: 0; background: none; color: var(--blue); font-size: 13px; cursor: pointer; }
+        .download-btn:hover { text-decoration: underline; text-underline-offset: 3px; }
+        .chart-share-status { margin-top: 6px; font-size: 13px; color: var(--muted); }
         .chart-share-status:empty { display: none; }
-
-        .share-chart-btn-prominent {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin: 16px auto 0;
-            padding: 10px 22px;
-            background: #4A7BA7;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
+        footer { max-width: 1144px; margin: 30px auto 20px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.7; }
+        @media (max-width: 768px) {
+            .container { padding: 14px 16px; }
+            header .container { padding-top: 20px; padding-bottom: 14px; }
+            header h1 { font-size: 23px; letter-spacing: -.4px; }
+            header p { font-size: 14px; }
+            .citation { font-size: 12px; line-height: 1.6; }
+            .data-status { font-size: 12px; gap: 2px 12px; }
+            .controls { padding-bottom: 10px; margin-bottom: 14px; }
+            .mobile-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 14px; min-height: 44px; background: var(--blue); color: white; border: 1px solid var(--blue); border-radius: 5px; font-size: 14px; font-weight: 600; }
+            #toggleIcon { font-size: 10px; transition: transform .15s; }
+            .controls:not(.collapsed) #toggleIcon { transform: rotate(180deg); }
+            .controls.collapsed .controls-content { display: none; }
+            .controls-content { grid-template-columns: 1fr 1fr; gap: 12px 16px; padding-top: 14px; }
+            .frequency-group { grid-column: 1 / -1; grid-row: 2; }
+            .breakdown-group { grid-column: 2; grid-row: 1; }
+            .ambiguous-option { grid-row: 3; }
+            .radio-group label { min-height: 36px; font-size: 14px; }
+            .radio-group { gap: 0 12px; }
+            select { font-size: 16px; min-height: 44px; }
+            .chart-heading { font-size: 15px; }
+            .date-range-group { display: block; margin-bottom: 8px; }
+            .date-range-group > .group-heading, .custom-date-range { display: none; }
+            .preset-chips { width: 100%; gap: 0; }
+            .preset-chips button { flex: 1; min-width: 0; padding: 8px 2px; min-height: 44px; }
+            .chart-wrapper { height: 350px; }
+            .chart-wrapper.precision-mode { height: 410px; }
+            .precision-filters-group { flex-direction: column; gap: 6px; }
+            .precision-filters-group label { min-height: 32px; }
+            .chart-share-actions { gap: 4px 16px; }
+            .share-chart-btn-prominent, .download-btn { min-height: 44px; }
+            #save-chart-image-btn { display: none; }
+            footer { margin: 24px 16px 16px; }
         }
-
-        .share-chart-btn-prominent:hover {
-            background: #005A93;
-        }
-
-        .share-chart-btn-prominent:disabled {
-            background: #7a9bbf;
-            cursor: wait;
-        }
-
-        .share-chart-btn-prominent .share-icon {
-            font-size: 16px;
-            line-height: 1;
-        }
-
-        .share-chart-btn-prominent.save-chart-btn {
-            background: white;
-            color: #4A7BA7;
-            box-shadow: inset 0 0 0 1px #4A7BA7;
-        }
-
-        .share-chart-btn-prominent.save-chart-btn:hover {
-            background: #f0f4fa;
-        }
-
-        .preset-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .mobile-date-chips {
-            display: none;
-        }
-
-        .preset-chips button {
-            flex: 1 0 calc(33.333% - 4px);
-            min-width: 0;
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            background: white;
-            color: #4A7BA7;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85em;
-            font-weight: 600;
-            transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
-        }
-
-        @media (hover: hover) {
-            .preset-chips button:hover {
-                background: #4A7BA7;
-                color: white;
-                border-color: #4A7BA7;
-            }
-        }
-
-        .preset-chips button.active {
-            background: #4A7BA7;
-            color: white;
-            border-color: #4A7BA7;
-        }
-
-        .preset-chips button:active {
-            background: #005A93;
-            transform: scale(0.94);
-        }
-
-        /* Post-release "spring back" feedback. On hover devices (desktop) we also flash
-           the button blue to signal the selection; on touch devices we only animate the
-           depression so it feels like a native button press without a lingering selected state. */
-        .preset-chips button.just-clicked {
-            animation: chip-press 180ms ease-out;
-        }
-
-        @media (hover: hover) {
-            .preset-chips button.just-clicked {
-                background: #4A7BA7;
-                color: white;
-                border-color: #4A7BA7;
-            }
-        }
-
-        @keyframes chip-press {
-            0%   { transform: scale(0.94); }
-            100% { transform: scale(1); }
-        }
-
-        .download-btn:hover {
-            background-color: #4A7BA7;
-            color: white;
-        }
-
-        footer {
-            margin-top: 40px;
-            padding: 20px;
-            text-align: center;
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .info-box {
-            background-color: #eef4fa;
-            border-left: 4px solid #4A7BA7;
-            padding: 16px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-        }
-
-        .info-box p {
-            margin: 0;
-            font-size: 0.95em;
-            line-height: 1.5;
-        }
-
-        /* Mobile toggle button - only visible on mobile */
-        .mobile-toggle {
-            display: none;
-        }
-
-        /* Desktop-only elements */
-        .desktop-only {
-            display: block;
-        }
-
-        /* Mobile responsive styles */
-        @media screen and (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
-            header {
-                padding: 20px 15px;
-            }
-
-            header h1 {
-                font-size: 1.5em;
-            }
-
-            header p {
-                font-size: 1em;
-            }
-
-            .main-content {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .controls {
-                width: 100%;
-                padding: 15px;
-                order: 2; /* Move controls below charts on mobile */
-                position: sticky;
-                bottom: 0;
-                z-index: 100;
-                max-height: 55vh;
-                overflow-y: auto;
-                transition: padding-bottom 260ms ease;
-            }
-
-            .controls.collapsed {
-                overflow: hidden;
-                padding-bottom: 0;
-            }
-
-            .mobile-toggle {
-                width: 100%;
-                padding: 15px;
-                background: #4A7BA7;
-                color: white;
-                border: none;
-                border-radius: 6px 6px 0 0;
-                font-size: 1.1em;
-                font-weight: 600;
-                cursor: pointer;
-                margin-bottom: 0;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }
-
-            .controls.collapsed .mobile-toggle {
-                border-radius: 6px;
-                margin-bottom: 0;
-            }
-
-            .mobile-toggle:active {
-                background: #3d6a8f;
-            }
-
-            #toggleIcon {
-                display: inline-block;
-                transition: transform 260ms ease;
-            }
-
-            .controls:not(.collapsed) #toggleIcon {
-                transform: rotate(180deg);
-            }
-
-            .desktop-only {
-                display: none !important;
-            }
-
-            .controls-content {
-                display: block;
-                padding-top: 15px;
-                background: white;
-                max-height: 3000px;
-                opacity: 1;
-                overflow: hidden;
-                transition: max-height 260ms ease, opacity 200ms ease, padding-top 260ms ease;
-            }
-
-            .controls.collapsed .controls-content {
-                max-height: 0;
-                opacity: 0;
-                padding-top: 0;
-            }
-
-            .charts {
-                order: 1; /* Show charts first on mobile */
-            }
-
-            .chart-wrapper {
-                height: 350px !important;
-            }
-
-            .chart-wrapper.precision-mode {
-                height: 460px !important;
-            }
-
-            .control-group label {
-                font-size: 1em;
-                padding: 8px 0;
-                display: block;
-            }
-
-            /* Larger touch targets for radio buttons and checkboxes */
-            .control-group input[type="radio"],
-            .control-group input[type="checkbox"] {
-                width: 20px;
-                height: 20px;
-                margin-right: 10px;
-                cursor: pointer;
-            }
-
-            .control-group label {
-                cursor: pointer;
-                padding: 10px 0;
-            }
-
-            /* Better slider styling for touch */
-            input[type="range"] {
-                height: 40px;
-                -webkit-appearance: none;
-                appearance: none;
-                background: transparent;
-                cursor: pointer;
-            }
-
-            input[type="range"]::-webkit-slider-track {
-                background: #ddd;
-                height: 8px;
-                border-radius: 4px;
-            }
-
-            input[type="range"]::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 28px;
-                height: 28px;
-                background: #4A7BA7;
-                border-radius: 50%;
-                cursor: pointer;
-                margin-top: -10px;
-            }
-
-            input[type="range"]::-moz-range-track {
-                background: #ddd;
-                height: 8px;
-                border-radius: 4px;
-            }
-
-            input[type="range"]::-moz-range-thumb {
-                width: 28px;
-                height: 28px;
-                background: #4A7BA7;
-                border-radius: 50%;
-                cursor: pointer;
-                border: none;
-            }
-
-            /* Edge/IE specific slider styles */
-            input[type="range"]::-ms-track {
-                width: 100%;
-                height: 8px;
-                background: transparent;
-                border-color: transparent;
-                color: transparent;
-                cursor: pointer;
-            }
-
-            input[type="range"]::-ms-fill-lower {
-                background: #4A7BA7;
-                border-radius: 4px;
-            }
-
-            input[type="range"]::-ms-fill-upper {
-                background: #ddd;
-                border-radius: 4px;
-            }
-
-            input[type="range"]::-ms-thumb {
-                width: 28px;
-                height: 28px;
-                background: #4A7BA7;
-                border-radius: 50%;
-                cursor: pointer;
-                border: none;
-                margin-top: 0;
-            }
-
-            /* Focus states for accessibility */
-            input[type="range"]:focus {
-                outline: none;
-            }
-
-            input[type="range"]:focus::-webkit-slider-thumb {
-                box-shadow: 0 0 0 3px rgba(74, 123, 167, 0.3);
-            }
-
-            input[type="range"]:focus::-moz-range-thumb {
-                box-shadow: 0 0 0 3px rgba(74, 123, 167, 0.3);
-            }
-
-            input[type="range"]:focus::-ms-thumb {
-                box-shadow: 0 0 0 3px rgba(74, 123, 167, 0.3);
-            }
-
-            .download-btn {
-                font-size: 1em;
-                padding: 15px 20px;
-                margin-top: 12px;
-            }
-
-            .preset-chips button {
-                flex: 1 1 0;
-                padding: 12px 4px;
-                font-size: 0.95em;
-            }
-
-            .share-chart-btn-prominent {
-                width: 100%;
-                padding: 14px;
-                font-size: 16px;
-                margin-top: 18px;
-            }
-
-            .date-range-group {
-                display: none;
-            }
-
-            .mobile-date-chips {
-                display: flex;
-            }
-
-            .info-box {
-                font-size: 0.9em;
-                padding: 12px;
-            }
-
-            .citation {
-                font-size: 0.8em;
-            }
-
-            /* Better select styling for touch */
-            .control-group select {
-                padding: 12px;
-                font-size: 16px;
-            }
-
-            .precision-filters {
-                position: relative;
-                top: auto;
-                right: auto;
-                max-width: 100%;
-                /* margin and padding come from the base rule + .visible modifier
-                   so the collapsed state stays truly zero-height. */
-            }
-
-            .precision-filters h4 {
-                font-size: 0.9em;
-                margin-bottom: 12px;
-            }
-
-            .precision-filters label {
-                font-size: 0.9em;
-                padding: 8px 0;
-                margin-bottom: 10px;
-            }
-
-            .precision-filters input[type="radio"] {
-                width: 20px;
-                height: 20px;
-                margin-right: 12px;
-            }
-        }
-
-        /* Extra small phones */
-        @media screen and (max-width: 480px) {
-            header h1 {
-                font-size: 1.3em;
-            }
-
-            .chart-wrapper {
-                height: 300px !important;
-            }
-
-            .chart-wrapper.precision-mode {
-                height: 420px !important;
-            }
-
-            .control-group select,
-            .control-group input {
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
+        @media (max-width: 360px) {
+            .container { padding-left: 12px; padding-right: 12px; }
+            header h1 { font-size: 21px; }
+            .chart-wrapper { height: 320px; }
         }
     </style>
 </head>
@@ -933,45 +138,43 @@
     <header>
         <div class="container">
             <h1>Supply and Demand Driven PCE Inflation</h1>
-            <p>Decomposition of inflation into supply-driven, demand-driven, and ambiguous components</p>
+            <p>Supply, demand and ambiguous contributions to U.S. PCE inflation.</p>
             <div class="citation">Shapiro (2026), <i>Journal of Money, Credit and Banking</i> | <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/jmcb.13209">Published Article</a> | <a href="https://www.frbsf.org/wp-content/uploads/wp2022-18.pdf">Working Paper</a></div>
-            <div class="data-through" id="dataThroughBadge" style="display:none;"></div>
-            <time class="last-update" id="lastUpdated" hidden></time>
+            <div class="data-status">
+                <time class="last-update" id="lastUpdated" hidden></time>
+                <div class="data-through" id="dataThroughBadge" style="display:none;"></div>
+            </div>
         </div>
     </header>
 
     <div class="container">
         <div class="main-content">
             <aside class="controls collapsed" id="controlsPanel">
-                <button class="mobile-toggle" id="mobileToggle" onclick="toggleControls()">
-                    <span>Chart Options</span>
-                    <span id="toggleIcon">▼</span>
+                <button class="mobile-toggle" id="mobileToggle" onclick="toggleControls()" aria-expanded="false" aria-controls="controlsContent">
+                    <span>Chart options</span>
+                    <span id="toggleIcon" aria-hidden="true">▼</span>
                 </button>
 
-                <div class="controls-content">
-                    <div class="info-box">
-                    <p>Each month, PCE price categories are split by whether the price move is more likely driven by supply factors or by consumer demand. Categories where neither signal dominates are labeled <em>ambiguous</em>.</p>
-                </div>
-
-                <div class="control-group">
-                    <label class="group-heading">Inflation Series</label>
-                    <div class="radio-group">
+                <div class="controls-content" id="controlsContent">
+<div class="control-group">
+                    <span class="group-heading" id="seriesHeading">Inflation series</span>
+                    <div class="radio-group" role="radiogroup" aria-labelledby="seriesHeading">
                         <label><input type="radio" name="series" value="headline" checked> Headline PCE</label>
-                        <label><input type="radio" name="series" value="core"> Core PCE (ex. food & energy)</label>
+                        <label><input type="radio" name="series" value="core" aria-label="Core PCE (ex. food & energy)"> Core PCE</label>
                     </div>
                 </div>
 
-                <div class="control-group">
-                    <label class="group-heading">Frequency</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="frequency" value="yearly" checked> Year-over-year (y/y)</label>
-                        <label><input type="radio" name="frequency" value="monthly"> Monthly (m/m)</label>
-                        <label id="quarterlyOption"><input type="radio" name="frequency" value="quarterly" id="quarterlyRadio"> Quarterly (q/q) <span id="quarterlyNote" style="font-size: 0.85em; color: #999;"></span></label>
+                <div class="control-group frequency-group">
+                    <span class="group-heading" id="frequencyHeading">Frequency</span>
+                    <div class="radio-group" role="radiogroup" aria-labelledby="frequencyHeading">
+                        <label><input type="radio" name="frequency" value="yearly" checked> Year-over-year</label>
+                        <label><input type="radio" name="frequency" value="monthly"> Monthly</label>
+                        <label id="quarterlyOption"><input type="radio" name="frequency" value="quarterly" id="quarterlyRadio"> Quarterly <span id="quarterlyNote" style="font-size: 0.85em; color: #999;"></span></label>
                     </div>
                 </div>
 
-                <div class="control-group">
-                    <label class="group-heading">Breakdown</label>
+                <div class="control-group breakdown-group">
+                    <label class="group-heading" for="breakdown">Breakdown</label>
                     <select id="breakdown">
                         <option value="baseline">Baseline</option>
                         <option value="precision">Precision levels</option>
@@ -981,44 +184,23 @@
                     </select>
                 </div>
 
-                <div class="control-group">
+                <div class="control-group ambiguous-option">
                     <label class="checkbox-row">
                         <input type="checkbox" id="showAmbiguous" checked>
                         <span>Model with ambiguous category</span>
                     </label>
                 </div>
 
-                <div class="control-group date-range-group">
-                    <label class="group-heading">Date Range</label>
-                    <div class="preset-chips" style="margin-bottom: 10px;">
-                        <button type="button" onclick="setDateRange(1)">1Y</button>
-                        <button type="button" onclick="setDateRange(2)">2Y</button>
-                        <button type="button" onclick="setDateRange(3)">3Y</button>
-                        <button type="button" onclick="setDateRange(5)">5Y</button>
-                        <button type="button" onclick="setDateRange(10)">10Y</button>
-                        <button type="button" onclick="setDateRange('all')">All</button>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                        <label for="startDateInput" style="font-size: 0.85em; font-weight: normal; color: #666; min-width: 40px;">Start:</label>
-                        <input type="month" id="startDateInput" class="month-input">
-                    </div>
-                    <input type="range" id="startDateSlider" min="0" max="1" step="1" value="0" style="width: 100%;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; margin-bottom: 4px;">
-                        <label for="endDateInput" style="font-size: 0.85em; font-weight: normal; color: #666; min-width: 40px;">End:</label>
-                        <input type="month" id="endDateInput" class="month-input">
-                    </div>
-                    <input type="range" id="endDateSlider" min="0" max="1" step="1" value="1" style="width: 100%;">
-                </div>
 
-                <button class="download-btn" onclick="downloadFullDataset()">Download Full Dataset (Excel)</button>
-                <button class="download-btn" onclick="downloadViewCSV()" style="margin-top: 10px;">Download Current View (CSV)</button>
+
                 </div>
             </aside>
 
             <main class="charts">
                 <div class="chart-container">
                     <div class="chart-header">
-                        <h2 id="chartTitle">Supply and Demand Driven Inflation Contributions</h2>
+                        <h2 id="chartTitle" class="sr-only">Supply and Demand Driven Inflation Contributions</h2>
+                        <p class="chart-heading" id="chartHeading" aria-hidden="true">Headline PCE · Year-over-year</p>
                         <div class="precision-filters" id="mainPrecisionFilters">
                             <p class="precision-explainer">Precision = how confidently a price change can be attributed to supply or demand. Filter to show only categories above a chosen confidence level; the rest are grouped into <em>ambiguous</em>.</p>
                             <h4>Show:</h4>
@@ -1029,12 +211,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="chart-wrapper">
-                        <div class="chart-loading" id="chartLoading">Loading data…</div>
-                        <canvas id="mainChart"></canvas>
-                    </div>
-
-                    <div class="preset-chips mobile-date-chips" style="margin-top: 15px;">
+                <div class="control-group date-range-group">
+                    <label class="group-heading">Date Range</label>
+                    <div class="preset-chips">
                         <button type="button" onclick="setDateRange(1)">1Y</button>
                         <button type="button" onclick="setDateRange(2)">2Y</button>
                         <button type="button" onclick="setDateRange(3)">3Y</button>
@@ -1042,12 +221,30 @@
                         <button type="button" onclick="setDateRange(10)">10Y</button>
                         <button type="button" onclick="setDateRange('all')">All</button>
                     </div>
+                    <details class="custom-date-range"><summary>Custom dates</summary><div class="custom-date-grid"><div>                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <label for="startDateInput" style="font-size: 0.85em; font-weight: normal; color: #666; min-width: 40px;">Start:</label>
+                        <input type="month" id="startDateInput" class="month-input">
+                    </div>
+                    <input type="range" id="startDateSlider" aria-label="Start date" min="0" max="1" step="1" value="0" style="width: 100%;">
+</div><div>                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <label for="endDateInput" style="font-size: 0.85em; font-weight: normal; color: #666; min-width: 40px;">End:</label>
+                        <input type="month" id="endDateInput" class="month-input">
+                    </div>
+                    <input type="range" id="endDateSlider" aria-label="End date" min="0" max="1" step="1" value="1" style="width: 100%;">
+</div></div></details>
+                </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-loading" id="chartLoading">Loading data…</div>
+                        <canvas id="mainChart"></canvas>
+                    </div>
 
-                    <div class="chart-share-actions">
+<div class="chart-share-actions">
                         <button id="share-chart-btn" type="button" class="share-chart-btn-prominent" onclick="shareChart()">
                             <span class="share-icon" aria-hidden="true">↗</span> Share This Chart
                         </button>
                         <button id="save-chart-image-btn" type="button" class="share-chart-btn-prominent save-chart-btn" onclick="shareChart('download')">Save PNG</button>
+                <button class="download-btn" onclick="downloadFullDataset()">All data (Excel)</button>
+                <button class="download-btn" onclick="downloadViewCSV()">Chart data (CSV)</button>
                     </div>
                     <p id="chart-share-status" class="chart-share-status" role="status"></p>
                 </div>
@@ -1282,15 +479,17 @@
         // Mobile controls toggle. Arrow rotation is handled entirely in CSS,
         // so the button text stays consistent while the icon animates.
         function toggleControls() {
-            document.getElementById('controlsPanel').classList.toggle('collapsed');
+            const expanded = !document.getElementById('controlsPanel').classList.toggle('collapsed');
+            document.getElementById('mobileToggle').setAttribute('aria-expanded', String(expanded));
         }
 
-        // Auto-expand controls on desktop, start collapsed on mobile
+        let wasMobile = null;
         function checkScreenSize() {
-            const panel = document.getElementById('controlsPanel');
-            if (window.innerWidth > 768) {
-                panel.classList.remove('collapsed');
-            }
+            const mobile = window.innerWidth <= 768;
+            if (mobile === wasMobile) return;
+            wasMobile = mobile;
+            document.getElementById('controlsPanel').classList.toggle('collapsed', mobile);
+            document.getElementById('mobileToggle').setAttribute('aria-expanded', String(!mobile));
         }
 
         // Run on load and resize
@@ -1623,6 +822,10 @@
             }
 
             document.getElementById('chartTitle').textContent = mainConfig.title;
+            const headingParts = [series === 'headline' ? 'Headline PCE' : 'Core PCE',
+                {yearly: 'Year-over-year', monthly: 'Month-over-month', quarterly: 'Quarter-over-quarter'}[frequency]];
+            if (breakdown !== 'baseline') headingParts.push({precision: 'Precision levels', goods: 'Goods', services: 'Non-housing services', housing: 'Housing'}[breakdown]);
+            document.getElementById('chartHeading').textContent = headingParts.join(' · ');
         }
 
         function getChartConfigWithData(series, frequency, breakdown, showAmbiguous, data, precisionFilter = 'all') {
@@ -1814,6 +1017,13 @@
                                 }
                             },
                             stacked: true,
+                            afterBuildTicks(scale) {
+                                // Keep the first and final date labels when thinning a narrow chart.
+                                const limit = scale.chart.width < 330 ? 4 : scale.chart.width <= 600 ? 5 : 9;
+                                const ticks = scale.ticks;
+                                if (ticks.length > limit) scale.ticks = Array.from({length: limit}, (_, i) => ticks[Math.round(i * (ticks.length - 1) / (limit - 1))]);
+                            },
+                            ticks: { autoSkip: false, maxRotation: 0, font: { size: 11 } },
                             grid: {
                                 display: false
                             }
@@ -1831,13 +1041,18 @@
                     },
                     plugins: {
                         legend: {
-                            position: window.innerWidth <= 768 ? 'top' : 'bottom',
+                            position: 'top',
                             labels: {
-                                boxWidth: window.innerWidth <= 768 ? 15 : 12,
-                                padding: window.innerWidth <= 768 ? 12 : 10,
+                                generateLabels(chart) {
+                                    const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    if (chart.width <= 600) labels.forEach(label => { label.text = label.text.replace(/-driven/gi, ''); });
+                                    return labels;
+                                },
+                                boxWidth: 12,
+                                padding: 10,
                                 usePointStyle: false,
                                 font: {
-                                    size: window.innerWidth <= 768 ? 13 : 12
+                                    size: 12
                                 }
                             }
                         },
