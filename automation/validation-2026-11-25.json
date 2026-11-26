@@ -25,5 +25,20 @@
     "revised_historical_cases_classified_normally": 10
   },
   "independent_stata_corrected_csv_cells": 116,
-  "p_drive_available_or_patched": false
+  "p_drive_available_or_patched": false,
+  "v2_hosted_fresh_bea_validation_run": "https://github.com/adamshap/supply-demand-webapp/actions/runs/45761242562",
+  "v2_hosted_native_stata_max_errors": {
+    "csv:supply_demand_baseline.csv": 1.7763568394002505e-15,
+    "csv:supply_demand_ambiguous.csv": 1.7763568394002505e-15,
+    "csv:supply_demand_quarterly.csv": 0.0,
+    "csv:supply_demand_goods_services.csv": 0.0,
+    "csv:supply_demand_goods_services_ambiguous.csv": 9.99999993922529e-09,
+    "csv:supply_demand_precision.csv": 0.0,
+    "excel:supply_demand_baseline.csv": 8.881784197001252e-16,
+    "excel:supply_demand_ambiguous.csv": 8.881784197001252e-16,
+    "excel:supply_demand_quarterly.csv": 8.881784197001252e-16,
+    "excel:supply_demand_goods_services.csv": 4.440892098500626e-16,
+    "excel:supply_demand_goods_services_ambiguous.csv": 4.440892098500626e-16,
+    "excel:supply_demand_precision.csv": 4.440892098500626e-16
+  }
 }

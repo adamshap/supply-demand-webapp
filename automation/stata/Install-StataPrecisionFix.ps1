@@ -63,6 +63,10 @@ $sdConfig = @'
         "old": "qui predict `i'_up, resid",
         "new": "qui predict `i'_up, resid\nqui sd_zero_exact_fit `i'_up, regressors(\"l($cumul/`lagc').`i'_quant l($cumul/`lagc').`i'_plev trend*\")"
       }
+    ],
+    "regressions": [
+      "qui reg `i'_quant l($cumul/`lagc').`i'_quant l($cumul/`lagc').`i'_plev trend* if ignore == 0",
+      "qui reg `i'_plev l($cumul/`lagc').`i'_quant l($cumul/`lagc').`i'_plev trend* if ignore == 0"
     ]
   },
   {
@@ -76,6 +80,10 @@ $sdConfig = @'
         "old": "qui predict `i'_up, resid",
         "new": "qui predict `i'_up, resid\nqui sd_zero_exact_fit `i'_up, regressors(\"l(1/$lag).`i'_quant l(1/$lag).`i'_plev\")"
       }
+    ],
+    "regressions": [
+      "qui reg `i'_quant l(1/$lag).`i'_quant l(1/$lag).`i'_plev if ignore == 0",
+      "qui reg `i'_plev l(1/$lag).`i'_quant l(1/$lag).`i'_plev if ignore == 0"
     ]
   }
 ]
@@ -90,6 +98,11 @@ foreach ($sdFile in $sdConfig) {
     $sdBefore = [IO.File]::ReadAllBytes($sdPath)
     $sdText = $sdUtf8.GetString($sdBefore)
     if ($sdText.Contains("`r`r`n")) { throw "Unexpected line endings in $sdPath" }
+    # A separate P: copy may differ: verify the fitted model before patching it.
+    $sdCompact = [regex]::Replace($sdText, '\s+', '')
+    foreach ($sdRegression in $sdFile.regressions) {
+        if (-not $sdCompact.Contains([regex]::Replace($sdRegression, '\s+', ''))) { throw "Regression differs from the verified model; preserving $sdPath" }
+    }
     $sdNewline = if ($sdText.Contains("`r`n")) { "`r`n" } else { "`n" }
     $sdBlock = $sdHelper.Replace("`r`n", "`n").TrimEnd("`r", "`n").Replace("`n", $sdNewline) + $sdNewline
     if ($sdText.Contains('* BEGIN SD EXACT-FIT POLICY v2')) {
