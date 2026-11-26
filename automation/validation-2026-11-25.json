@@ -40,5 +40,10 @@
     "excel:supply_demand_goods_services.csv": 4.440892098500626e-16,
     "excel:supply_demand_goods_services_ambiguous.csv": 4.440892098500626e-16,
     "excel:supply_demand_precision.csv": 4.440892098500626e-16
-  }
+  },
+  "v2_hosted_benchmark_publish_run": "https://github.com/adamshap/supply-demand-webapp/actions/runs/45761866542",
+  "v2_published_data_commit": "098b3a0",
+  "v2_live_seven_file_hashes_verified": true,
+  "v2_live_bea_release_date": "2026-11-25",
+  "v2_recent_values_max_change": 0.0
 }
