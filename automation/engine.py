@@ -3,9 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import json
-import hashlib
+from ols_precision import standardized_residuals
 
 FOOD_ENERGY = set('nlgom nlglm nofum noflm nfofm nfonm nfoldm nfolem nfolbm nfefm slem slgm'.split())
 PARTS = ('demHH', 'demH', 'demL', 'supHH', 'supH', 'supL', 'amb')
@@ -39,11 +37,6 @@ def calculate(panel: pd.DataFrame, categories: list[str], dates: list[int], quar
         'hous': [categories.index(c) for c in 'shrm shtm srdm shom'.split()],
     }
     results = []
-    legacy = json.loads(Path(__file__).with_name('historical-zero-ties.json').read_text())['records']
-    ties = {}
-    for record in legacy:
-        if record['frequency'] == ('quarterly' if quarterly else 'monthly'):
-            ties.setdefault(record['time'], []).append(record)
     for date in dates:
         t = panel.index.get_loc(date)
         start = max(0, t - window)
@@ -54,27 +47,9 @@ def calculate(panel: pd.DataFrame, categories: list[str], dates: list[int], quar
             if not valid[-1] or valid.sum() <= 2 * lag + 1:
                 raise ValueError(f'Insufficient model data for {categories[c]} at {date}')
             xx, yy = xx[valid], yy[valid]
-            xc, yc = xx - xx.mean(axis=0), yy - yy.mean(axis=0)
-            beta = np.linalg.lstsq(xc, yc, rcond=None)[0]
-            errors = (yc - xc @ beta).astype('float32').astype(float)
-            sd = errors.std(axis=0, ddof=1)
-            if not np.isfinite(sd).all():
-                raise ValueError(f'Invalid residual dispersion for {categories[c]} at {date}')
-            with np.errstate(divide='ignore', invalid='ignore'):
-                score = (errors[-1] / sd).astype('float32')
-            # Rounded historical quantity indexes can be constant (e.g. early
-            # computer quantities). Stata's resulting missing t-score compares
-            # greater than finite positive thresholds. Preserve that convention.
-            score[(np.ptp(yy, axis=0) == 0) | ~np.isfinite(score)] = np.inf
-            scores[c] = score
+            scores[c], _ = standardized_residuals(xx, yy)
         same = (scores[:, 0] > 0) == (scores[:, 1] > 0)
         strength = np.min(np.abs(scores), axis=1)
-        for record in ties.get(date, []):
-            c = record['category']
-            frame = panel.loc[date - window - lag:date, [c, c + '_quant']]
-            signature = hashlib.sha256(frame.to_csv(float_format='%.12g', lineterminator='\n').encode()).hexdigest()
-            if signature != record['input_sha256'] or strength[categories.index(c)] >= 1e-4:
-                raise ValueError(f'Historical numerical-tie inputs changed for {c} at {date}; review required')
         row = {'time': date}
         for aggregate, denominator in [('hdln', 'pce_spend'), ('core', 'core_spend')]:
             members = set(categories) if aggregate == 'hdln' else set(categories) - FOOD_ENERGY
@@ -93,11 +68,6 @@ def calculate(panel: pd.DataFrame, categories: list[str], dates: list[int], quar
                     'supL': ~same & (strength > cutoff) & (strength <= .15),
                     'amb': strength <= cutoff,
                 }
-                if variant == 'base':
-                    for record in ties.get(date, []):
-                        index = categories.index(record['category'])
-                        for part, mask in masks.items():
-                            mask[index] = part == record['classification']
                 for group, indices in group_indices.items():
                     idx = [i for i in indices if categories[i] in members]
                     for part, mask in masks.items():

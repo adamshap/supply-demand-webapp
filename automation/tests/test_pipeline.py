@@ -25,12 +25,16 @@ class PipelineTests(unittest.TestCase):
     def test_all_six_csvs_against_full_stata_release(self):
         for file,frame in self.csvs.items():
             expected=pd.read_csv(FIX/(file+'.gz'))
+            for change in pd.read_csv(FIX/'stata_unit_leverage_corrections.csv').itertuples():
+                if change.file==file:expected.loc[expected.date==change.date,change.column]=change.csv_value
             self.assertEqual(list(frame.date),list(expected.date))
             self.assertEqual(list(frame.columns),list(expected.columns))
             np.testing.assert_allclose(frame.drop(columns='date'),expected.drop(columns='date'),atol=1e-6,rtol=0,equal_nan=True,err_msg=file)
 
     def test_excel_all_six_sheets_and_roundtrip(self):
         expected=read_frames(FIX/'supply_demand_public.xlsx',self.schema)
+        for change in pd.read_csv(FIX/'stata_unit_leverage_corrections.csv').itertuples():
+            expected[change.file].loc[expected[change.file].date==change.date,change.column]=change.excel_value
         for file,frame in self.excels.items():
             self.assertEqual(list(frame.date),list(expected[file].date))
             np.testing.assert_allclose(frame.drop(columns='date'),expected[file].drop(columns='date'),atol=1e-6,rtol=0,equal_nan=True,err_msg=file)
@@ -68,10 +72,24 @@ class PipelineTests(unittest.TestCase):
         np.testing.assert_allclose(stata_round(np.array([.005,-.005,.145,-.195]),.01),[.01,0,.14,-.19],atol=1e-15)
         self.assertEqual(file_hash('x.csv',b'a,b\r\n1,2\r\n'),file_hash('x.csv',b'a,b\n1,2\n'))
 
-    def test_changed_historical_tie_inputs_fail_closed(self):
+    def test_changed_historical_inputs_recalculate_without_overrides(self):
         changed=self.panel.copy();changed.loc[130,'drgim']+=.001
-        with self.assertRaisesRegex(ValueError,'Historical numerical-tie inputs changed'):
-            calculate(changed,self.categories,[130])
+        actual=calculate(changed,self.categories,[130])
+        self.assertTrue(np.isfinite(actual.to_numpy()).all())
+
+    def test_full_benchmark_accepts_revised_and_rebased_history(self):
+        from revision_scenarios import scenario
+        paths=[ROOT/name for name in PUBLIC_FILES]+[ROOT/'automation/state.json',ROOT/'data-update.json']
+        before=[p.read_bytes() for p in paths]
+        revised=scenario(self.panel,self.categories,'benchmark_revision')
+        with tempfile.TemporaryDirectory() as folder:
+            folder=Path(folder);cached=folder/'revised.csv.gz'
+            revised.to_csv(cached,compression='gzip')
+            report=run(ROOT,'validate',True,cached,folder/'candidate')
+            self.assertTrue(report['full_history'])
+            self.assertEqual(report['latest_month'],'2026-10')
+            self.assertTrue(all((folder/'candidate'/name).exists() for name in PUBLIC_FILES))
+        self.assertEqual(before,[p.read_bytes() for p in paths])
 
     def test_update_installs_seven_exports_and_date_only_after_validation(self):
         import shutil

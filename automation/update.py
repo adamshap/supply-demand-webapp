@@ -21,7 +21,7 @@ from release_calendar import release_metadata
 from workbook import month_number, quarter_number, read_frames, write_frames
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_VERSION = '2026-11-bea-supply-demand-stata-v1'
+MODEL_VERSION = '2026-11-unit-leverage-stata-v2'
 PUBLIC_FILES = [*FILES, 'supply_demand_public.xlsx']
 
 
