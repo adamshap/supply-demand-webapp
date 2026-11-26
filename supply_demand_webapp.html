@@ -114,6 +114,17 @@
             letter-spacing: 0.02em;
         }
 
+        .last-update {
+            display: inline-block;
+            margin: 12px 0 0 12px;
+            color: #6b7280;
+            font-size: 0.82em;
+        }
+        .last-update[hidden] { display: none; }
+        @media (max-width: 600px) {
+            .last-update { display: block; margin: 4px 0 0; }
+        }
+
         .main-content {
             display: flex;
             gap: 30px;
@@ -925,6 +936,7 @@
             <p>Decomposition of inflation into supply-driven, demand-driven, and ambiguous components</p>
             <div class="citation">Shapiro (2026), <i>Journal of Money, Credit and Banking</i> | <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/jmcb.13209">Published Article</a> | <a href="https://www.frbsf.org/wp-content/uploads/wp2022-18.pdf">Working Paper</a></div>
             <div class="data-through" id="dataThroughBadge" style="display:none;"></div>
+            <time class="last-update" id="lastUpdated" hidden></time>
         </div>
     </header>
 
@@ -1339,6 +1351,28 @@
             return data;
         }
 
+        async function updateDataStatus(baseline) {
+            const updated = document.getElementById('lastUpdated');
+            updated.hidden = true;
+            if (!baseline.length) return;
+            const latest = baseline[baseline.length - 1].date.slice(0, 7);
+            try {
+                const response = await fetch(`data-update.json?v=${Date.now()}`, { cache: 'no-store' });
+                if (!response.ok) return;
+                const metadata = await response.json();
+                if (metadata.data_through !== latest || !/^\d{4}-\d{2}-\d{2}$/.test(metadata.bea_release_date)) return;
+                const date = new Date(`${metadata.bea_release_date}T12:00:00Z`);
+                if (Number.isNaN(date.getTime())) return;
+                updated.textContent = `Last updated ${date.toLocaleDateString('en-US', {
+                    month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC'
+                })}`;
+                updated.dateTime = metadata.bea_release_date;
+                updated.hidden = false;
+            } catch (error) {
+                console.warn('Release date is unavailable; data coverage is shown from the CSV.');
+            }
+        }
+
         // Fetch fresh data on every page load, including just after a monthly upload.
         const cacheBuster = Date.now();
         Promise.all([
@@ -1366,6 +1400,7 @@
                 badge.style.display = 'inline-block';
             }
             updateCharts();
+            updateDataStatus(baseline);
         }).catch(error => {
             console.error('Error loading data:', error);
             document.querySelectorAll('.chart-wrapper').forEach(el => {

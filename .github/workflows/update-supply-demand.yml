@@ -1,0 +1,99 @@
+name: Update supply/demand from BEA
+on:
+  schedule:
+    # Lightweight calendar checks; data downloads run only for a due release.
+    - cron: '57 12,13,17,21 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Validate only, update, or rebuild the full benchmark'
+        type: choice
+        options: [validate, update, benchmark]
+        default: validate
+      follow_calendar:
+        description: 'Use the release calendar (scheduled runs always do)'
+        type: boolean
+        default: false
+      full_history:
+        description: 'Recalculate all historical months'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: bea-supply-demand-update
+  cancel-in-progress: false
+jobs:
+  calculate:
+    if: github.event_name != 'schedule' || vars.BEA_AUTO_UPDATE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    outputs:
+      data_changed: ${{ steps.update.outputs.data_changed }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: automation/requirements.txt
+      - name: Check official BEA release calendar
+        id: calendar
+        env:
+          FOLLOW_CALENDAR: ${{ github.event_name == 'schedule' || inputs.follow_calendar }}
+        run: |
+          args=()
+          if [ "$FOLLOW_CALENDAR" != 'true' ]; then args+=(--bypass); fi
+          python automation/release_calendar.py "${args[@]}"
+      - if: steps.calendar.outputs.run_update == 'true'
+        run: python -m pip install -r automation/requirements.txt
+      - name: Verify calculation against fixed Stata reference
+        if: steps.calendar.outputs.run_update == 'true'
+        run: |
+          python -m unittest discover -s automation/tests -v
+          node automation/tests/test_dashboard_status.js
+      - name: Download, calculate and validate
+        if: steps.calendar.outputs.run_update == 'true'
+        id: update
+        env:
+          BEA_API_KEY: ${{ secrets.BEA_API_KEY }}
+          UPDATE_MODE: ${{ github.event_name == 'schedule' && 'update' || inputs.mode }}
+          FULL_HISTORY: ${{ inputs.full_history }}
+          EXPECTED_MONTH: ${{ steps.calendar.outputs.expected_month }}
+          RELEASE_UTC: ${{ steps.calendar.outputs.release_utc }}
+        run: |
+          args=(--mode "$UPDATE_MODE")
+          if [ "$FULL_HISTORY" = 'true' ]; then args+=(--full-history); fi
+          if [ -n "$EXPECTED_MONTH" ]; then args+=(--expected-month "$EXPECTED_MONTH"); fi
+          if [ -n "$RELEASE_UTC" ]; then args+=(--release-utc "$RELEASE_UTC"); fi
+          python automation/update.py "${args[@]}"
+      - name: Commit validated release
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add supply_demand_*.csv supply_demand_public.xlsx data-update.json automation/state.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Update supply/demand from BEA through ${{ steps.update.outputs.latest_month }}'
+          git push origin HEAD:main
+      - name: Save validation report and candidate downloads
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: supply-demand-validation-${{ github.run_id }}
+          path: update-artifacts/
+          retention-days: 30
+          if-no-files-found: ignore
+  publish:
+    needs: calculate
+    if: needs.calculate.outputs.data_changed == 'true' && (github.event_name == 'schedule' || inputs.mode != 'validate')
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-pages.yml

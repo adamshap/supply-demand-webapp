@@ -1,0 +1,131 @@
+haver_code,bea_price,bea_spending,subtract,description
+dbbm,DBARRG,DBARRC,False,"Pleasure boats, aircraft, and other recreational vehicles"
+debm,DEBKRG,DEBKRC,False,Educational books (96)
+dfgdm,DCHNRG,DCHNRC,False,Dishes and flatware
+dfgkm,DNECRG,DNECRC,False,Nonelectric cookware and tableware
+dfkkm,DMHARG,DMHARC,False,Major household appliances
+dfksm,DSEARG,DSEARC,False,Small electric household appliances
+dfofm,DFLRRG,DFLRRC,False,Carpets and other floor coverings
+dfolm,DCLFRG,DCLFRC,False,"Clocks, lamps, lighting fixtures, and other household decorative items"
+dfotm,DWCTRG,DWCTRC,False,Window coverings
+dfslm,DLWNRG,DLWNRC,False,Outdoor equipment and supplies
+dfstm,DHDWRG,DHDWRC,False,"Tools, hardware, and supplies"
+dftim,DMSCRG,DMSCRC,False,Musical instruments (part of 80)
+dfum,DFNRRG,DFNRRC,False,Furniture
+dmnm,DNEARG,DNEARC,False,New autos
+dmtnm,DNWTRG,DNWTRC,False,New light trucks
+dmttm,DTATRG,DTATRC,False,Tires
+dmtum,DUTRRG,DUTRRC,False,Used light trucks
+dmtvm,DPAARG,DPAARC,False,Accessories and parts
+dmum,DNPURG,DNPURC,False,Used autos
+dojjm,DJLYRG,DJLYRC,False,Jewelry
+dojwm,DWTCRG,DWTCRC,False,Watches
+dolm,DLUGRG,DLUGRC,False,Luggage and similar personal items (part of 119)
+dooem,DEYERG,DEYERC,False,Corrective eyeglasses and contact lenses
+dootm,DTMERG,DTMERC,False,Therapeutic medical equipment
+dotm,DTCERG,DTCERC,False,Telephone and related communication equipment
+dowbm,DBCYRG,DBCYRC,False,Bicycles and accessories
+dowlm,DMCYRG,DMCYRC,False,Motorcycles
+dowpm,DCAMRG,DCAMRC,False,Photographic equipment
+drbm,DRBKRG,DRBKRC,False,Recreational books (part of 90)
+drgdm,DVAARG,DVAARC,False,Video and audio equipment
+drgim,DIPERG,DIPERC,False,Information processing equipment
+drsm,DSPGRG,DSPGRC,False,"Sporting equipment, supplies, guns, and ammunition (part of 80)"
+nfefm,DFFDRG,DFFDRC,False,Food produced and consumed on farms (6)
+nfofm,DFOFRG,DFOFRC,False,Food purchased for off-premises consumption
+nfolbm,DMLTRG,DMLTRC,False,Beer
+nfoldm,DLIQRG,DLIQRC,False,Spirits
+nfolem,DWINRG,DWINRC,False,Wine
+nfonm,DNBVRG,DNBVRC,False,Nonalcoholic beverages purchased for off-premises consumption
+ngarm,DFLORG,DFLORC,False,"Flowers, seeds, and potted plants"
+nlffm,DWGCRG,DWGCRC,False,Women's and girls' clothing (10)
+nlfim,DCICRG,DCICRC,False,Children's and infants' clothing (12)
+nlglm,DLUBRG,DLUBRC,False,Lubricants and fluids
+nlgom,DGASRG,DGASRC,False,Gasoline and other motor fuel
+nlmfm,DMBCRG,DMBCRC,False,Men's and boys' clothing (11)
+nlolm,DCSMRG,DCSMRC,False,Clothing materials
+nlsm,DSHURG,DSHURC,False,Shoes and other footwear
+nlxim,DMICRG,DMICRC,False,Standard clothing issued to military personnel
+nmgm,DMAGRG,DMAGRC,False,Newspapers and periodicals
+nodom,DOMPRG,DOMPRC,False,Other medical products
+nodrm,DPNPRG,DPNPRC,False,Pharmaceutical products
+noflm,DLPFRG,DLPFRC,False,Other fuels
+nofum,DOILRG,DOILRC,False,Fuel oil
+nogfm,DFLMRG,DFLMRC,False,Film and photographic supplies
+nogtm,DDOLRG,DDOLRC,False,"Games, toys, and hobbies"
+nolfm,DPAPRG,DPAPRC,False,Household paper products
+nolnm,DLINRG,DLINRC,False,Household linens
+nolom,DMHPRG,DMHPRC,False,Miscellaneous household products
+nolpm,DCLERG,DCLERC,False,Household cleaning products
+nolsm,DSEWRG,DSEWRC,False,Sewing items
+nonm,DSTYRG,DSTYRC,False,Stationery and miscellaneous printed materials
+nopcm,DCOSRG,DCOSRC,False,Cosmetic / perfumes / bath / nail preparations and implements
+nopem,DEAPRG,DEAPRC,False,Electric appliances for personal care
+noppm,DOPHRG,DOPHRC,False,"Hair, dental, shaving, and miscellaneous personal care products except electrical products"
+notm,DTOBRG,DTOBRC,False,Tobacco (127)
+novrm,DREMRG,DREMRC,True,Less: Personal remittances in kind to nonresidents
+novum,DABDRG,DABDRC,False,Expenditures abroad by U.S. residents
+nrpm,DPRPRG,DPRPRC,False,Pets and related products
+sbom,DPRORG,DPRORC,False,Accounting and other business services
+sbopm,DAXSRG,DAXSRC,False,Professional association dues
+sboum,DUNSRG,DUNSRC,False,Labor organization dues
+seovm,DVEDRG,DVEDRC,False,Commercial and vocational schools (99)
+sfeem,DFOORG,DFOORC,False,Food furnished to employees (including military) (103)
+sfpm,DPMBRG,DPMBRC,False,Purchased meals and beverages (102)
+shom,DGRHRG,DGRHRC,False,Group housing (23)
+shotm,DHOTRG,DHOTRC,False,Hotels and motels
+shrm,DFARRG,DFARRC,False,Rental value of farm dwellings (22)
+shsm,DSCHRG,DSCHRC,False,Housing at schools
+shtm,DTENRG,DTENRC,False,Rental of tenant-occupied nonfarm housing (20)
+sldm,DDMSRG,DDMSRC,False,Domestic services
+slem,DELCRG,DELCRC,False,Electricity (27)
+slgm,DGHERG,DGHERC,False,Natural gas (28)
+slim,DFINRG,DFINRC,False,Net household insurance (111)
+sloom,DMHSRG,DMHSRC,False,Other household services
+slopm,DERERG,DERERC,False,Repair of household appliances
+slorm,DFRERG,DFRERC,False,"Repair of furniture, furnishings, and floor coverings"
+slosm,DMSERG,DMSERC,False,"Moving, storage, and freight services"
+sltpm,DCOMRG,DCOMRC,False,Communication
+slwrm,DREFRG,DREFRC,False,Garbage and trash collection
+slwsm,DWSMRG,DWSMRC,False,Water supply and sewage maintenance
+smdm,DDENRG,DDENRC,False,Dental services (45)
+smhnm,DNRSRG,DNRSRC,False,Nursing homes (52)
+smhpm,DHSPRG,DHSPRC,False,Hospitals (51)
+smim,DHINRG,DHINRC,False,Net health insurance (112)
+smom,DPMSRG,DPMSRC,False,Paramedical services (46)
+smpm,DPHYRG,DPHYRC,False,Physician services (44)
+snfcm,DOFIRG,DOFIRC,False,"Financial service charges, fees, and commissions (108)"
+sobfm,DFUNRG,DFUNRC,False,Funeral and burial services
+sobim,DLIFRG,DLIFRC,False,Life insurance (110)
+soblm,DGALRG,DGALRC,False,Legal services
+sobsm,DIMPRG,DIMPRC,False,Financial services furnished without payment (107)
+soeem,DNEHRG,DNEHRC,False,"Nursery, elementary, and secondary schools (98)"
+soeum,DHEDRG,DHEDRC,False,Higher education (97)
+soplm,DCFSRG,DCFSRC,False,Clothing and footwear services
+soslm,DMUSRG,DMUSRC,False,Museums and libraries
+sppm,DPCSRG,DPCSRC,False,Personal care services
+srccm,DMDFRG,DMDFRC,False,Membership clubs and participant sports centers
+srcpm,DORSRG,DORSRC,False,"Amusement parks, campgrounds, and related recreational services"
+srdm,DOWNRG,DOWNRC,False,Imputed rental of owner-occupied nonfarm housing (21)
+srepm,DAVPRG,DAVPRC,False,"Audio-video, photographic, and information processing equipment services (parts of 77 and 93)"
+srevm,DRRERG,DRRERC,False,Maintenance and repair of recreational vehicles and sports equipment
+srkm,DHOLRG,DHOLRC,False,Package tours
+srobm,DPARRG,DPARRC,False,Pari-mutuel net receipts
+srogm,DCASRG,DCASRC,False,Casino gambling
+srolm,DLOTRG,DLOTRC,False,Lotteries
+srovm,DVETRG,DVETRC,False,Veterinary and other services for pets
+srsm,DADMRG,DADMRC,False,Admissions to specified spectator amusements
+ssscm,DCHCRG,DCHCRC,False,Child care
+sssfm,DGIVRG,DGIVRC,False,Foundations and grantmaking and giving services to households
+sssrm,DRELRG,DRELRC,False,Religious organizations' services to households
+sssvm,DSADRG,DSADRC,False,Social advocacy and civic and social organizations
+ssswm,DSCWRG,DSCWRC,False,Social assistance
+stigm,DGRDRG,DGRDRC,False,Ground transportation (63)
+stipm,DAITRG,DAITRC,False,Air transportation (64)
+stiwm,DWATRG,DWATRC,False,Water transportation (65)
+strlm,DOVSRG,DOVSRC,False,Other motor vehicle services (61)
+sturm,DVMRRG,DVMRRC,False,Motor vehicle maintenance and repair (60)
+svim,DTINRG,DTINRC,False,Net motor vehicle and other transportation insurance (116)
+svtm,DFTRRG,DFTRRC,False,Foreign travel by U.S. residents (129)
+svxm,DEXFRG,DEXFRC,True,Less: Expenditures in the United States by nonresidents (130)
+pcfm,DNPIRG,DNPIRC,False,Final consumption expenditures of nonprofit institutions serving households (NPISHs) (132)

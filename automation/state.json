@@ -1,0 +1,17 @@
+{
+  "latest_month": "2026-10",
+  "model_version": "2026-11-bea-supply-demand-stata-v1",
+  "probe_sha256": "73d7814aab6df53fe1956c068c564e3afa03242e17bc5b753fb6ebc1dd58711c",
+  "inputs_sha256": "1193ad8931eafd110e3447e118ae175354f988958e006b70b684a310470e467a",
+  "published_files_sha256": {
+    "supply_demand_baseline.csv": "ea2312a1ccba90f4b48414659943f9d40846b7faab98568d1e10535b5f4f8147",
+    "supply_demand_ambiguous.csv": "adc5170d6397e41ed0a46628ddc6ed6da86ff7e6135d4e0efdc9bff1fc42a0d0",
+    "supply_demand_quarterly.csv": "f723b12cff3f3e22cdbaf153768f8a972db99eebf7c020aa47b1d0c3b0668458",
+    "supply_demand_goods_services.csv": "2768b1a6cb864147f77bfb7300880a347e110118a00b8aea02f6f007ce1bdb3a",
+    "supply_demand_goods_services_ambiguous.csv": "57701b3a73a7fb6c17d6a9e71a1c082f78cc85d6c6ee05cd987f170ceed851d2",
+    "supply_demand_precision.csv": "cdb9dbd4a604b3e6ff69318083a4e43161899c7728d078f2a5ed83527a1a0199",
+    "supply_demand_public.xlsx": "86da65b70386b156990a78369d7610a8d57299c7402d46c6c6a67bc6b7b78b90"
+  },
+  "last_full_rebuild_data_month": null,
+  "last_successful_change_utc": "2026-11-26T04:36:18.371630+00:00"
+}

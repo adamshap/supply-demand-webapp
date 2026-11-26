@@ -1,0 +1,13 @@
+name: Publish website
+on:
+  push:
+    branches: [main]
+    paths: ['supply_demand_webapp.html', 'supply_demand_*.csv', 'supply_demand_public.xlsx', 'data-update.json', 'preview.png', '.github/workflows/*pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  publish:
+    uses: ./.github/workflows/deploy-pages.yml

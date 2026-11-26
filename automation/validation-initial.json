@@ -1,0 +1,44 @@
+[
+  {
+    "file": "supply_demand_baseline.csv",
+    "cells": 5552,
+    "max_error": 8.881784197001252e-16,
+    "differences_over_1e_6": 0,
+    "missingness_differences": 0
+  },
+  {
+    "file": "supply_demand_ambiguous.csv",
+    "cells": 8328,
+    "max_error": 8.881784197001252e-16,
+    "differences_over_1e_6": 0,
+    "missingness_differences": 0
+  },
+  {
+    "file": "supply_demand_goods_services.csv",
+    "cells": 16656,
+    "max_error": 4.991455071490236e-08,
+    "differences_over_1e_6": 0,
+    "missingness_differences": 0
+  },
+  {
+    "file": "supply_demand_goods_services_ambiguous.csv",
+    "cells": 24984,
+    "max_error": 4.9975585891814944e-08,
+    "differences_over_1e_6": 0,
+    "missingness_differences": 0
+  },
+  {
+    "file": "supply_demand_precision.csv",
+    "cells": 19432,
+    "max_error": 4.768371586472142e-08,
+    "differences_over_1e_6": 0,
+    "missingness_differences": 0
+  },
+  {
+    "file": "supply_demand_quarterly.csv",
+    "cells": 1856,
+    "max_error": 4.9890136910590854e-08,
+    "differences_over_1e_6": 0,
+    "missingness_differences": 0
+  }
+]
