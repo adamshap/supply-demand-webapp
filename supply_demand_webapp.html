@@ -574,21 +574,20 @@
         let allData = {};
         let mainChart = null;
 
-        // Color scheme matching SF Fed — brightened for legibility on wide desktop views
-        // where inter-bar white space visually washes out softer tones.
+        // Approved dark blue, coral and cream palette; darker shades indicate higher precision.
         const colors = {
-            demand: 'rgb(70, 145, 215)',       // Blue (was baby blue rgb(120,180,230))
-            supply: 'rgb(240, 100, 100)',      // Red (was baby red rgb(255,140,140))
-            ambiguous: 'rgb(245, 220, 175)',   // Cream (deeper than rgb(250,235,210))
-            demandHH: 'rgb(30, 90, 150)',      // Darkest baby blue (very high precision) - darker for more contrast
-            demandH: 'rgb(80, 145, 210)',      // Medium baby blue (high precision)
-            demandL: 'rgb(160, 210, 245)',     // Light baby blue (low precision) - lighter for more contrast
-            supplyHH: 'rgb(180, 60, 60)',      // Darkest baby red (very high precision) - darker for more contrast
-            supplyH: 'rgb(230, 110, 110)',     // Medium baby red (high precision)
-            supplyL: 'rgb(255, 180, 180)',     // Light baby red (low precision) - lighter for more contrast
-            goods: 'rgb(230, 140, 30)',        // Orange
-            housing: 'rgb(180, 110, 180)',     // Plum
-            services: 'rgb(70, 145, 215)'      // Blue (matches demand)
+            demand: '#465267',       // Dark blue
+            supply: '#FF907F',       // Coral
+            ambiguous: '#F2E8D3',    // Soft cream
+            demandHH: '#465267',     // Very high precision
+            demandH: '#748399',      // High precision
+            demandL: '#ADB6C4',      // Low precision
+            supplyHH: '#C95E52',     // Very high precision
+            supplyH: '#FF907F',      // High precision
+            supplyL: '#FFD2C8',      // Low precision
+            goods: 'rgb(230, 140, 30)',
+            housing: 'rgb(180, 110, 180)',
+            services: '#465267'      // Matches demand
         };
 
         // CSV parsing function
