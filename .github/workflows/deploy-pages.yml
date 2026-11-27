@@ -43,7 +43,8 @@ jobs:
           node automation/preview/render.mjs --site _site
       - name: Verify new uploads and benchmark revisions refresh the image
         run: python automation/preview/test_uploads.py _site
-      - uses: actions/upload-pages-artifact@v5
+      # Use the established v4 artifact format consumed by deploy-pages.
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
       - name: Publish
