@@ -43,7 +43,14 @@ jobs:
           node automation/preview/render.mjs --site _site
       - name: Verify new uploads and benchmark revisions refresh the image
         run: python automation/preview/test_uploads.py _site
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v5
       - name: Save preview and upload-test evidence
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: dashboard-sharing-preview
@@ -52,9 +59,4 @@ jobs:
             _site/preview-release.json
             preview-upload-test-results.json
           retention-days: 30
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: _site
-      - name: Publish
-        id: deployment
-        uses: actions/deploy-pages@v5
+          if-no-files-found: warn
