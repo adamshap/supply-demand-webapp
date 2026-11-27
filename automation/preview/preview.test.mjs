@@ -18,10 +18,12 @@ test('new image bytes get a fresh immutable filename',()=>{
 });
 
 test('sharing metadata changes without altering public app code or body',()=>{
-  const html='<head><meta property="og:image" content="old"><meta name="twitter:image" content="old"></head><body><canvas></canvas><script>const x=1;</script></body>';
-  const output=updateSharingImages(html,'https://example.com/preview-new.png');
+  const html='<head><meta property="og:image" content="old"><meta property="og:image:alt" content="October 2026"><meta name="twitter:image" content="old"></head><body><canvas></canvas><script>const x=1;</script></body>';
+  const output=updateSharingImages(html,'https://example.com/preview-new.png','Supply & Demand — data through November 2026');
   assert.equal(output.split('<body')[1],html.split('<body')[1]);
   assert.equal((output.match(/https:\/\/example.com\/preview-new.png/g)||[]).length,2);
+  assert(output.includes('Supply &amp; Demand — data through November 2026'));
+  assert(!output.includes('October 2026'));
   assert.throws(()=>updateSharingImages('<body>no tags</body>','url'));
 });
 

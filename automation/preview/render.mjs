@@ -4,7 +4,7 @@ import {createServer} from 'node:http';
 import {readFile, writeFile, rename} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {captureHtml, imageName, latestCsvMonth, updateSharingImages} from './preview.mjs';
+import {captureHtml, imageName, latestCsvMonth, monthLabel, updateSharingImages} from './preview.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(directory, '../..');
@@ -81,7 +81,7 @@ try {
   await rename(path.join(site,'preview.png.tmp'),path.join(site,'preview.png'));
   for(const file of [config.html,'index.html']) {
     const html = await readFile(path.join(site,file),'utf8');
-    await writeFile(path.join(site,file),updateSharingImages(html,url));
+    await writeFile(path.join(site,file),updateSharingImages(html,url,`${config.title} — data through ${monthLabel(through)}`));
   }
   const report={data_version:manifest.version,data_through:through,image:filename,image_url:url,width:1200,height:630,...chartInfo};
   await writeFile(path.join(site,'preview-release.json'),JSON.stringify(report,null,2)+'\n');

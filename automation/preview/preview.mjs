@@ -39,10 +39,13 @@ export function imageName(png) {
   return `preview-${createHash('sha256').update(png).digest('hex').slice(0, 20)}.png`;
 }
 
-export function updateSharingImages(html, url) {
+export function updateSharingImages(html, url, alt) {
   let openGraph = 0, twitter = 0;
   const updated = html.replace(/<meta\b[^>]*>/gi, tag => {
     const property = /\b(?:property|name)=["']([^"']+)["']/i.exec(tag)?.[1];
+    if (alt && ['og:image:alt', 'twitter:image:alt'].includes(property)) {
+      return tag.replace(/\bcontent=["'][^"']*["']/i, `content="${escape(alt)}"`);
+    }
     if (!['og:image', 'og:image:secure_url', 'twitter:image'].includes(property)) return tag;
     if (property === 'og:image') openGraph++;
     if (property === 'twitter:image') twitter++;
