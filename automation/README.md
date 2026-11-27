@@ -76,7 +76,8 @@ by this image-generation step.
 
 Before publication, disposable new-month and same-month-revision fixtures verify
 that dates, PNG bytes, and image URLs refresh. Synthetic data stays outside the
-published site. Rendering/validation failure stops publication rather than
+published site. Pages publication retries transient GitHub artifact-indexing failures after 15
+and 30 seconds. Rendering/validation failure stops publication rather than
 publishing a stale preview with newer data. Rerun Publish website after resolving
 a failed run. The `dashboard-sharing-preview` artifact stores the real preview,
 `preview-release.json`, and integration-test evidence for 30 days.

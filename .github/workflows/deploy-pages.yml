@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 20
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url || steps.deployment_final.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -43,12 +43,27 @@ jobs:
           node automation/preview/render.mjs --site _site
       - name: Verify new uploads and benchmark revisions refresh the image
         run: python automation/preview/test_uploads.py _site
-      # Use the established v4 artifact format consumed by deploy-pages.
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - name: Publish
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - name: Wait for GitHub artifact indexing before retry
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 15
+      - name: Retry publication after artifact indexing
+        id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - name: Wait before final publication attempt
+        if: steps.deployment_retry.outcome == 'failure'
+        run: sleep 30
+      - name: Final publication attempt
+        id: deployment_final
+        if: steps.deployment_retry.outcome == 'failure'
         uses: actions/deploy-pages@v5
       - name: Save preview and upload-test evidence
         if: always()
