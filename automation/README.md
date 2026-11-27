@@ -57,3 +57,31 @@ An open dashboard checks the small manifest once per minute while visible, when 
 A new upload still needs its GitHub Pages deployment to finish. The site cannot show an upload before GitHub has published it. The displayed Last updated remains the BEA release date, not the time of a background check.
 
 `node automation/tests/test_data_refresh.js` checks new months, same-month revisions, preserved selections, versioned Excel links, failed/older-release protection and refresh triggers. `python -m unittest discover -s automation/tests -p test_package_site.py` checks immutable snapshot paths and byte preservation. These run during Pages publishing as well as the release-update checks.
+
+## Automatic sharing images
+
+Every Pages publication generates a new 1200 × 630 chart preview from the exact
+staged data snapshot. This covers manual CSV uploads, ordinary BEA updates, and
+September benchmarks through the shared `deploy-pages.yml` workflow. The public
+HTML and index alias point to an immutable `preview-<image-hash>.png`; the legacy
+`preview.png` URL also serves the latest rendered image. The visible dashboard,
+PNG downloads, and sharing-button behavior are unchanged.
+
+The chart is rendered by its own dashboard code with the approved chart-only
+layout, five-year range, title, colors, and date caption. The caption reads the
+actual CSV/chart month, including uploads with old `data-update.json` metadata.
+Pinned Chart.js, date adapter, and Chromium dependencies render locally on the
+GitHub runner, with analytics and external requests blocked. No BEA key is used
+by this image-generation step.
+
+Before publication, disposable new-month and same-month-revision fixtures verify
+that dates, PNG bytes, and image URLs refresh. Synthetic data stays outside the
+published site. Rendering/validation failure stops publication rather than
+publishing a stale preview with newer data. Rerun Publish website after resolving
+a failed run. The `dashboard-sharing-preview` artifact stores the real preview,
+`preview-release.json`, and integration-test evidence for 30 days.
+
+The generated release metadata is also public at `preview-release.json`. Images
+update automatically on the hosting side; LinkedIn controls its own cache and
+may keep old images on existing posts. Its Post Inspector can refresh a URL for
+future shares without posting anything.

@@ -11,6 +11,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -26,6 +27,31 @@ jobs:
           python -m unittest discover -s automation/tests -p test_package_site.py
       - name: Stage public dashboard files
         run: python automation/package_site.py --output _site
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: automation/preview/package-lock.json
+      - name: Install pinned offline chart renderer
+        working-directory: automation/preview
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Generate sharing image from the staged data snapshot
+        run: |
+          node --test automation/preview/preview.test.mjs
+          node automation/preview/render.mjs --site _site
+      - name: Verify new uploads and benchmark revisions refresh the image
+        run: python automation/preview/test_uploads.py _site
+      - name: Save preview and upload-test evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: dashboard-sharing-preview
+          path: |
+            _site/preview.png
+            _site/preview-release.json
+            preview-upload-test-results.json
+          retention-days: 30
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site

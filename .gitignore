@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 update-artifacts/
 .sd-export-*/
+
+_site/
+automation/preview/node_modules/
+preview-upload-test-results.json

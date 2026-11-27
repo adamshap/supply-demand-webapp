@@ -1,0 +1,13 @@
+{
+  "name": "dashboard-sharing-preview",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test preview.test.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.65.1",
+    "chart.js": "4.4.0",
+    "chartjs-adapter-date-fns": "3.0.0"
+  }
+}

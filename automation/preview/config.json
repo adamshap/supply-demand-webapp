@@ -1,0 +1,8 @@
+{
+  "html": "supply_demand_webapp.html",
+  "chartId": "mainChart",
+  "csv": "supply_demand_ambiguous.csv",
+  "title": "Supply & Demand Driven PCE Inflation",
+  "caption": "Headline PCE, year-over-year \u00b7 Shapiro (2026), JMCB",
+  "baseUrl": "https://adamshap.github.io/supply-demand-webapp/"
+}
