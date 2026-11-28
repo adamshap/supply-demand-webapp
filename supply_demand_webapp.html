@@ -84,7 +84,10 @@
         .chart-loading.hidden { display: none; }
         .precision-filters { display: none; }
         .precision-filters.visible { display: block; padding: 12px; margin: 12px 0; background: var(--wash); border-radius: 6px; }
-        .precision-explainer { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+        .precision-about { margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+        .precision-about summary { width: fit-content; padding: 4px 0; cursor: pointer; }
+        .precision-about summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+        .precision-explainer { font-size: 13px; color: var(--muted); margin-top: 4px; max-width: 85ch; }
         .precision-filters h4 { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
         .precision-filters-group { display: flex; flex-wrap: wrap; gap: 8px 20px; }
         .precision-filters-group label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
@@ -226,7 +229,7 @@
                         <h2 id="chartTitle" class="sr-only">Supply and Demand Driven Inflation Contributions</h2>
                         <p class="chart-heading" id="chartHeading" aria-hidden="true">Headline PCE · Year-over-year</p>
                         <div class="precision-filters" id="mainPrecisionFilters">
-                            <p class="precision-explainer">Precision = how confidently a price change can be attributed to supply or demand. Filter to show only categories above a chosen confidence level; the rest are grouped into <em>ambiguous</em>.</p>
+                            <details class="precision-about"><summary>About precision</summary><p class="precision-explainer">Precision = how confidently a price change can be attributed to supply or demand. Filter to show only categories above a chosen confidence level; the rest are grouped into <em>ambiguous</em>.</p></details>
                             <h4>Show:</h4>
                             <div class="precision-filters-group">
                                 <label><input type="radio" name="mainPrecisionFilter" value="all" checked> All categories</label>
@@ -1150,7 +1153,13 @@
                             labels: {
                                 generateLabels(chart) {
                                     const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                                    if (chart.width <= 600) labels.forEach(label => { label.text = label.text.replace(/-driven/gi, ''); });
+                                    if (chart.width <= 600) labels.forEach(label => {
+                                        // Keep full dataset and export labels; abbreviate only the narrow chart legend.
+                                        label.text = label.text.replace(/-driven/gi, '').replace(
+                                            / \((low|high|very high|v\. high|high to very high|high\+)(?: precision)?\)/g,
+                                            (_, level) => ': ' + ({'very high': 'v. high', 'high to very high': 'high+'}[level] || level)
+                                        );
+                                    });
                                     return labels;
                                 },
                                 boxWidth: 12,
